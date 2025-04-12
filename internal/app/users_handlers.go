@@ -2,8 +2,10 @@ package app
 
 import (
 	"errors"
-	"main/internal/constants"
+	"github.com/mailru/easyjson"
+	"log"
 	"main/internal/interfaces"
+	"main/internal/schemas"
 	"main/internal/services"
 	"net/http"
 )
@@ -24,6 +26,12 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
+	}
+
+	authCredentials := &schemas.AuthCredentials{}
+	err = easyjson.Unmarshal(inputJSON, authCredentials)
+	if err != nil {
+		log.Fatalf("Не удалось спарсить json: %v", err)
 	}
 
 	originLink, err := h.service.Register(ctx, r.PathValue("id"))

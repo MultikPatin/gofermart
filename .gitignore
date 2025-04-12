@@ -20,3 +20,6 @@ vendor/
 
 # IDEs directories
 .idea
+
+# Easyjson
+*_easyjson.go

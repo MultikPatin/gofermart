@@ -1,6 +1,8 @@
 package schemas
 
-type Register struct {
+//easyjson -all internal/schemas/auth.go
+
+type AuthCredentials struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }

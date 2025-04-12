@@ -1,5 +1,7 @@
 package schemas
 
+//easyjson -all internal/schemas/order.go
+
 type Order struct {
 	Number   string  `json:"number"`
 	Status   string  `json:"status"`
