@@ -45,7 +45,10 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.service.Register(ctx, dtos.AuthCredentials(*authCredentials))
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Register user",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -81,7 +84,10 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Login(ctx, dtos.AuthCredentials(*authCredentials))
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Login user",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

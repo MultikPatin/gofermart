@@ -35,13 +35,19 @@ func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 
 	result, err := h.service.Get(ctx)
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Balance get",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 	resp, err := easyjson.Marshal(schemas.Balance(result))
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Balance get Marshal",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -78,7 +84,10 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Withdraw(ctx, dtos.Withdraw(*withdraw))
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Balance withdraw",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -102,7 +111,10 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 
 	results, err := h.service.Withdrawals(ctx)
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Balance withdrawals",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -120,7 +132,10 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 	var writer jwriter.Writer
 	err = marshalWithdrawalSlice(items, &writer)
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Balance withdrawals Marshal",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}

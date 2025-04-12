@@ -41,7 +41,10 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Add(ctx, OrderID)
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Order add",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -67,7 +70,10 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	results, err := h.service.GetAll(ctx)
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Order get all",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -85,7 +91,10 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	var writer jwriter.Writer
 	err = marshalOrderSlice(items, &writer)
 	if err != nil {
-		// add log
+		h.logger.Infow(
+			"Balance get all Marshal",
+			"error", err.Error(),
+		)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
