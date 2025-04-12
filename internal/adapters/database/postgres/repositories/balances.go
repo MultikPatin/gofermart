@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/interfaces"

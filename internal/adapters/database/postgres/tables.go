@@ -4,12 +4,9 @@ const (
 	createTables = `
 		CREATE TABLE IF NOT EXISTS users (
 		    id SERIAL PRIMARY KEY
+		    login VARCHAR(255) UNIQUE NOT NULL
+		    password VARCHAR(255) NOT NULL
 		);
-		CREATE TABLE IF NOT EXISTS events (
-		id SERIAL PRIMARY KEY,
-		user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-		origin VARCHAR(255) NOT NULL UNIQUE,
-		short VARCHAR(255) NOT NULL,
-		is_deleted BOOLEAN DEFAULT FALSE);
-		CREATE INDEX IF NOT EXISTS origin_index ON events(origin);`
+		CREATE UNIQUE INDEX IF NOT EXISTS user_login_index ON users(login);
+		`
 )

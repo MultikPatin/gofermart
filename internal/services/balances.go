@@ -27,10 +27,10 @@ func (s *BalancesService) Get(ctx context.Context) (dtos.Balance, error) {
 
 	err := s.repo.Get(ctx)
 	if err != nil {
-		return nil, err
+		return dtos.Balance{}, err
 	}
 
-	return nil, nil
+	return dtos.Balance{}, nil
 }
 
 func (s *BalancesService) Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error {
