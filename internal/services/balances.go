@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
 )
@@ -16,16 +17,16 @@ func NewBalancesService(r interfaces.BalancesRepository) *BalancesService {
 	}
 }
 
-func (s *BalancesService) Get(ctx context.Context) error {
+func (s *BalancesService) Get(ctx context.Context) (dtos.Balance, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
 	err := s.repo.Get(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }
 
 func (s *BalancesService) Withdraw(ctx context.Context) error {
@@ -38,4 +39,16 @@ func (s *BalancesService) Withdraw(ctx context.Context) error {
 	}
 
 	return nil
+}
+
+func (s *BalancesService) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	defer cancel()
+
+	err := s.repo.Withdrawals(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return nil, nil
 }

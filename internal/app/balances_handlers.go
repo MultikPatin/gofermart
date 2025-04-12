@@ -1,10 +1,13 @@
 package app
 
 import (
-	"errors"
+	"github.com/mailru/easyjson"
+	"github.com/mailru/easyjson/jwriter"
+	"io"
 	"main/internal/constants"
+	"main/internal/dtos"
 	"main/internal/interfaces"
-	"main/internal/services"
+	"main/internal/schemas"
 	"net/http"
 )
 
@@ -21,27 +24,71 @@ type BalancesHandler struct {
 func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
+	if r.Method != http.MethodGet {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	result, err := h.service.Get(ctx)
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	resp, err := easyjson.Marshal(schemas.Balance(result))
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//200 — успешная обработка запроса.
+	//401 — пользователь не авторизован.
+	//500 — внутренняя ошибка сервера.
+
+	w.Header().Set("content-type", constants.JSONContentType)
+	w.WriteHeader(http.StatusOK)
+	w.Write(resp)
+}
+
+func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
 	if r.Method != http.MethodPost {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 		return
 	}
 
-	originLink, err := h.service.Get(ctx, r.PathValue("id"))
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	withdraw := &schemas.Withdraw{}
+	err = easyjson.Unmarshal(body, withdraw)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.Withdraw(ctx, dtos.Withdraw(*withdraw))
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//200 — успешная обработка запроса;
+	//401 — пользователь не авторизован;
+	//402 — на счету недостаточно средств;
+	//422 — неверный номер заказа;
+	//500 — внутренняя ошибка сервера.
+
+	w.WriteHeader(http.StatusOK)
 }
 
-func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
+func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if r.Method != http.MethodGet {
@@ -49,17 +96,49 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.Withdraw(ctx, r.PathValue("id"))
+	results, err := h.service.Withdrawals(ctx)
 	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	if len(results) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	items := make([]schemas.Withdrawal, 0, len(results))
+	for i := 0; i < len(results); i++ {
+		items = append(items, schemas.Withdrawal(*results[i]))
+	}
+
+	var writer jwriter.Writer
+	err = marshalWithdrawalSlice(items, &writer)
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//200 — успешная обработка запроса.
+	//204 — нет ни одного списания.
+	//401 — пользователь не авторизован.
+	//500 — внутренняя ошибка сервера.
+
+	w.Header().Set("content-type", constants.JSONContentType)
+	w.WriteHeader(http.StatusOK)
+	w.Write(writer.Buffer.BuildBytes())
+}
+
+func marshalWithdrawalSlice(v []schemas.Withdrawal, wr *jwriter.Writer) error {
+	wr.RawByte('[')
+	for i := 0; i < len(v); i++ {
+		if i > 0 {
+			wr.RawByte(',')
+		}
+		v[i].MarshalEasyJSON(wr)
+	}
+	wr.RawByte(']')
+	return nil
 }

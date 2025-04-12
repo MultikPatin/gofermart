@@ -24,3 +24,8 @@ func (s *BalancesRepository) Withdraw(ctx context.Context) error {
 
 	return nil
 }
+
+func (s *BalancesRepository) Withdrawals(ctx context.Context) error {
+
+	return nil
+}

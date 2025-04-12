@@ -1,10 +1,11 @@
 package app
 
 import (
-	"errors"
+	"github.com/mailru/easyjson/jwriter"
+	"io"
 	"main/internal/constants"
 	"main/internal/interfaces"
-	"main/internal/services"
+	"main/internal/schemas"
 	"net/http"
 )
 
@@ -26,19 +27,30 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.Add(ctx, r.PathValue("id"))
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	OrderID := string(body)
+
+	err = h.service.Add(ctx, OrderID)
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//200 — номер заказа уже был загружен этим пользователем;
+	//202 — новый номер заказа принят в обработку;
+	//400 — неверный формат запроса;
+	//401 — пользователь не аутентифицирован;
+	//409 — номер заказа уже был загружен другим пользователем;
+	//422 — неверный формат номера заказа;
+	//500 — внутренняя ошибка сервера.
+
+	w.WriteHeader(http.StatusAccepted)
 }
 
 func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
@@ -49,17 +61,49 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.GetAll(ctx, r.PathValue("id"))
+	results, err := h.service.GetAll(ctx)
 	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	if len(results) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	items := make([]schemas.Order, 0, len(results))
+	for i := 0; i < len(results); i++ {
+		items = append(items, schemas.Order(*results[i]))
+	}
+
+	var writer jwriter.Writer
+	err = marshalOrderSlice(items, &writer)
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//200 — успешная обработка запроса.
+	//204 — нет данных для ответа.
+	//401 — пользователь не авторизован.
+	//500 — внутренняя ошибка сервера.
+
+	w.Header().Set("content-type", constants.JSONContentType)
+	w.WriteHeader(http.StatusOK)
+	w.Write(writer.Buffer.BuildBytes())
+}
+
+func marshalOrderSlice(v []schemas.Order, wr *jwriter.Writer) error {
+	wr.RawByte('[')
+	for i := 0; i < len(v); i++ {
+		if i > 0 {
+			wr.RawByte(',')
+		}
+		v[i].MarshalEasyJSON(wr)
+	}
+	wr.RawByte(']')
+	return nil
 }

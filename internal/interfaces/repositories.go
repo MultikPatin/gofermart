@@ -5,6 +5,7 @@ import "context"
 type BalancesRepository interface {
 	Get(ctx context.Context) error
 	Withdraw(ctx context.Context) error
+	Withdrawals(ctx context.Context) error
 }
 
 type OrdersRepository interface {
@@ -15,5 +16,4 @@ type OrdersRepository interface {
 type UsersRepository interface {
 	Register(ctx context.Context) error
 	Login(ctx context.Context) error
-	Withdrawals(ctx context.Context) error
 }

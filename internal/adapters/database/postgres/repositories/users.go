@@ -24,8 +24,3 @@ func (s *UsersRepository) Register(ctx context.Context) error {
 
 	return nil
 }
-
-func (s *UsersRepository) Withdrawals(ctx context.Context) error {
-
-	return nil
-}

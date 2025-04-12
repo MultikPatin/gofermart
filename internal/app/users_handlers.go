@@ -2,9 +2,7 @@ package app
 
 import (
 	"github.com/mailru/easyjson"
-	"github.com/mailru/easyjson/jwriter"
 	"io"
-	"main/internal/constants"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"main/internal/schemas"
@@ -48,10 +46,10 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//http.StatusConflict
-	//http.StatusInternalServerError
-	//http.StatusBadRequest
-	//http.StatusOK
+	//200 — пользователь успешно зарегистрирован и аутентифицирован;
+	//400 — неверный формат запроса;
+	//409 — логин уже занят;
+	//500 — внутренняя ошибка сервера.
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -84,65 +82,10 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//http.StatusConflict
-	//http.StatusInternalServerError
-	//http.StatusBadRequest
-	//http.StatusOK
+	//200 — пользователь успешно аутентифицирован;
+	//400 — неверный формат запроса;
+	//401 — неверная пара логин/пароль;
+	//500 — внутренняя ошибка сервера.
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func (h *UsersHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
-		return
-	}
-
-	results, err := h.service.Withdrawals(ctx)
-	if err != nil {
-		// add log
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	if len(results) == 0 {
-		w.WriteHeader(http.StatusNoContent)
-		return
-	}
-
-	items := make([]schemas.Withdrawal, 0, len(results))
-	for i := 0; i < len(results); i++ {
-		items = append(items, schemas.Withdrawal(*results[i]))
-	}
-
-	var writer jwriter.Writer
-	err = MarshalSliceEasyJSON(items, &writer)
-	if err != nil {
-		// add log
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
-
-	//http.StatusOK
-	//http.StatusNoContent
-	//http.StatusUnauthorized
-	//http.StatusInternalServerError
-
-	w.Header().Set("content-type", constants.JSONContentType)
-	w.WriteHeader(http.StatusOK)
-	w.Write(writer.Buffer.BuildBytes())
-}
-
-func MarshalSliceEasyJSON(v []schemas.Withdrawal, wr *jwriter.Writer) error {
-	wr.RawByte('[')
-	for i, w := range v {
-		if i > 0 {
-			wr.RawByte(',')
-		}
-		w.MarshalEasyJSON(wr)
-	}
-	wr.RawByte(']')
-	return nil
 }

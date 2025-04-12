@@ -5,6 +5,7 @@ import "net/http"
 type BalancesHandler interface {
 	Get(w http.ResponseWriter, r *http.Request)
 	Withdraw(w http.ResponseWriter, r *http.Request)
+	Withdrawals(w http.ResponseWriter, r *http.Request)
 }
 
 type OrdersHandler interface {
@@ -15,5 +16,4 @@ type OrdersHandler interface {
 type UsersHandler interface {
 	Register(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)
-	Withdrawals(w http.ResponseWriter, r *http.Request)
 }

@@ -40,15 +40,3 @@ func (s *UsersService) Register(ctx context.Context, credentials dtos.AuthCreden
 
 	return nil
 }
-
-func (s *UsersService) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-	defer cancel()
-
-	err := s.repo.Withdrawals(ctx)
-	if err != nil {
-		return nil, err
-	}
-
-	return nil, nil
-}
