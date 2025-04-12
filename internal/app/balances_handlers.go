@@ -8,17 +8,17 @@ import (
 	"net/http"
 )
 
-func NewOrdersHandler(s interfaces.OrdersService) *OrdersHandler {
-	return &OrdersHandler{
+func NewBalancesHandler(s interfaces.BalancesService) *BalancesHandler {
+	return &BalancesHandler{
 		service: s,
 	}
 }
 
-type OrdersHandler struct {
-	service interfaces.OrdersService
+type BalancesHandler struct {
+	service interfaces.BalancesService
 }
 
-func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
+func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if r.Method != http.MethodPost {
@@ -26,7 +26,7 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.Add(ctx, r.PathValue("id"))
+	originLink, err := h.service.Get(ctx, r.PathValue("id"))
 	if err != nil {
 		if errors.Is(err, services.ErrDeletedLink) {
 			http.Error(w, "Origin is deleted", http.StatusGone)
@@ -41,7 +41,7 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusTemporaryRedirect)
 }
 
-func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
+func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	if r.Method != http.MethodGet {
@@ -49,7 +49,7 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.GetAll(ctx, r.PathValue("id"))
+	originLink, err := h.service.Withdraw(ctx, r.PathValue("id"))
 	if err != nil {
 		if errors.Is(err, services.ErrDeletedLink) {
 			http.Error(w, "Origin is deleted", http.StatusGone)

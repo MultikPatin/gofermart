@@ -2,8 +2,8 @@ package app
 
 import (
 	"github.com/go-chi/chi/v5"
-	"main/internal/adapters"
-	"main/internal/adapters/db/psql"
+	"main/internal/adapters/database/postgres"
+	"main/internal/adapters/database/postgres/repositories"
 	"main/internal/config"
 	"main/internal/interfaces"
 	"main/internal/services"
@@ -24,16 +24,16 @@ func (a *App) Close() error {
 }
 
 type Handlers struct {
-	users    interfaces.UsersHandlers
-	orders   interfaces.OrdersHandlers
-	balances interfaces.BalanceHandlers
+	users    interfaces.UsersHandler
+	orders   interfaces.OrdersHandler
+	balances interfaces.BalancesHandler
 }
 
 type Services struct {
 	users      interfaces.UsersService
 	orders     interfaces.OrdersService
-	balances   interfaces.BalanceService
-	Repository *Repository
+	balances   interfaces.BalancesService
+	Repository *Repositories
 }
 
 func (s *Services) Close() error {
@@ -44,14 +44,14 @@ func (s *Services) Close() error {
 	return nil
 }
 
-type Repository struct {
+type Repositories struct {
 	users    interfaces.UsersRepository
 	orders   interfaces.OrdersRepository
-	balances interfaces.BalanceRepository
-	Database interfaces.DBConnection
+	balances interfaces.BalancesRepository
+	Database interfaces.Database
 }
 
-func (s *Repository) Close() error {
+func (s *Repositories) Close() error {
 	err := s.Database.Close()
 	if err != nil {
 		return err
@@ -76,44 +76,34 @@ func NewApp(c *config.Config) (*App, error) {
 
 func NewHandlers(s *Services) *Handlers {
 	return &Handlers{
-		orders:   NewOrdersHandlers(s.orders),
-		balances: NewBalancesHandlers(s.balances),
-		users:    NewUsersHandlers(s.users),
+		orders:   NewOrdersHandler(s.orders),
+		balances: NewBalancesHandler(s.balances),
+		users:    NewUsersHandler(s.users),
 	}
 }
 
 func NewServices(c *config.Config) (*Services, error) {
-	repository, err := NewRepository(c)
+	r, err := NewRepositories(c)
 	if err != nil {
 		return nil, err
 	}
 	return &Services{
-		orders:     services.NewOrdersService(c, repository.orders),
-		balances:   services.NewBalancesService(repository.balances),
-		users:      services.NewUserService(repository.users),
-		Repository: repository,
+		orders:     services.NewOrdersService(r.orders),
+		balances:   services.NewBalancesService(r.balances),
+		users:      services.NewUsersService(r.users),
+		Repository: r,
 	}, nil
 }
 
-func NewRepository(c *config.Config) (*Repository, error) {
-	var repository *Repository
-
-	logger := adapters.GetLogger()
-
-	db, err := psql.NewPostgresDB(c.PostgresDNS, logger)
+func NewRepositories(c *config.Config) (*Repositories, error) {
+	db, err := postgres.NewDatabase(c.PostgresDNS)
 	if err != nil {
 		return nil, err
 	}
-	logger.Info("Create PostgresDB Connection")
-	repository = NewPostgresRepository(db)
-	return repository, nil
-}
-
-func NewPostgresRepository(db *psql.PostgresDB) *Repository {
-	return &Repository{
-		orders:   psql.NewOrdersRepository(db),
-		users:    psql.NewUsersRepository(db),
-		balances: psql.NewBalancesRepository(db),
+	return &Repositories{
+		orders:   repositories.NewOrdersRepository(db),
+		users:    repositories.NewUsersRepository(db),
+		balances: repositories.NewBalancesRepository(db),
 		Database: db,
-	}
+	}, nil
 }

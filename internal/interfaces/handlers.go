@@ -2,17 +2,17 @@ package interfaces
 
 import "net/http"
 
-type BalanceHandlers interface {
+type BalancesHandler interface {
 	Get(w http.ResponseWriter, r *http.Request)
 	Withdraw(w http.ResponseWriter, r *http.Request)
 }
 
-type OrdersHandlers interface {
+type OrdersHandler interface {
 	Add(w http.ResponseWriter, r *http.Request)
 	GetAll(w http.ResponseWriter, r *http.Request)
 }
 
-type UsersHandlers interface {
+type UsersHandler interface {
 	Register(w http.ResponseWriter, r *http.Request)
 	Login(w http.ResponseWriter, r *http.Request)
 	Withdrawals(w http.ResponseWriter, r *http.Request)

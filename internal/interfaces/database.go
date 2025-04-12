@@ -1,6 +1,6 @@
 package interfaces
 
-type DBConnection interface {
+type Database interface {
 	Close() error
 	Ping() error
 }

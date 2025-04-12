@@ -6,21 +6,21 @@ import (
 	"time"
 )
 
-type OrdersService struct {
-	repo interfaces.OrdersRepository
+type BalancesService struct {
+	repo interfaces.BalancesRepository
 }
 
-func NewOrdersService(r interfaces.OrdersRepository) *OrdersService {
-	return &OrdersService{
+func NewBalancesService(r interfaces.BalancesRepository) *BalancesService {
+	return &BalancesService{
 		repo: r,
 	}
 }
 
-func (s *OrdersService) Add(ctx context.Context) error {
+func (s *BalancesService) Get(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Add(ctx)
+	err := s.repo.Get(ctx)
 	if err != nil {
 		return err
 	}
@@ -28,11 +28,11 @@ func (s *OrdersService) Add(ctx context.Context) error {
 	return nil
 }
 
-func (s *OrdersService) GetAll(ctx context.Context) error {
+func (s *BalancesService) Withdraw(ctx context.Context) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	err := s.repo.GetAll(ctx)
+	err := s.repo.Withdraw(ctx)
 	if err != nil {
 		return err
 	}

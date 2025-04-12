@@ -1,19 +1,19 @@
-package psql
+package postgres
 
 import (
 	"context"
 	"database/sql"
 	"fmt"
-	"go.uber.org/zap"
+	"main/internal/adapters"
 	"net/url"
 	"time"
 )
 
-type PostgresDB struct {
+type Database struct {
 	Connection *sql.DB
 }
 
-func (p *PostgresDB) Close() error {
+func (p *Database) Close() error {
 	err := p.Connection.Close()
 	if err != nil {
 		return err
@@ -21,20 +21,22 @@ func (p *PostgresDB) Close() error {
 	return nil
 }
 
-func (p *PostgresDB) Ping() error {
+func (p *Database) Ping() error {
 	err := p.Connection.Ping()
 	return err
 }
 
-func NewPostgresDB(PostgresDNS *url.URL, logger *zap.SugaredLogger) (*PostgresDB, error) {
+func NewDatabase(DNS *url.URL) (*Database, error) {
+	logger := adapters.GetLogger()
+
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	host := PostgresDNS.Hostname()
-	port := PostgresDNS.Port()
-	user := PostgresDNS.User.Username()
-	password, _ := PostgresDNS.User.Password()
-	dbname := PostgresDNS.Path[1:]
+	host := DNS.Hostname()
+	port := DNS.Port()
+	user := DNS.User.Username()
+	password, _ := DNS.User.Password()
+	dbname := DNS.Path[1:]
 
 	ps := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		host, port, user, password, dbname)
@@ -42,7 +44,7 @@ func NewPostgresDB(PostgresDNS *url.URL, logger *zap.SugaredLogger) (*PostgresDB
 	conn, err := sql.Open("pgx", ps)
 	if err != nil {
 		logger.Infow(
-			"Create Postgres Connection",
+			"Create Postgres Database",
 			"error", err.Error(),
 		)
 	}
@@ -54,7 +56,7 @@ func NewPostgresDB(PostgresDNS *url.URL, logger *zap.SugaredLogger) (*PostgresDB
 			"error", err.Error(),
 		)
 	}
-	postgresDB := PostgresDB{
+	postgresDB := Database{
 		Connection: conn,
 	}
 	return &postgresDB, err
