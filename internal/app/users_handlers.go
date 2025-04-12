@@ -2,7 +2,9 @@ package app
 
 import (
 	"github.com/mailru/easyjson"
+	"go.uber.org/zap"
 	"io"
+	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"main/internal/schemas"
@@ -12,11 +14,13 @@ import (
 func NewUsersHandler(s interfaces.UsersService) *UsersHandler {
 	return &UsersHandler{
 		service: s,
+		logger:  adapters.GetLogger(),
 	}
 }
 
 type UsersHandler struct {
 	service interfaces.UsersService
+	logger  *zap.SugaredLogger
 }
 
 func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {

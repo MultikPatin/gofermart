@@ -2,19 +2,23 @@ package services
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
 )
 
-type BalancesService struct {
-	repo interfaces.BalancesRepository
-}
-
 func NewBalancesService(r interfaces.BalancesRepository) *BalancesService {
 	return &BalancesService{
-		repo: r,
+		repo:   r,
+		logger: adapters.GetLogger(),
 	}
+}
+
+type BalancesService struct {
+	repo   interfaces.BalancesRepository
+	logger *zap.SugaredLogger
 }
 
 func (s *BalancesService) Get(ctx context.Context) (dtos.Balance, error) {
@@ -29,7 +33,7 @@ func (s *BalancesService) Get(ctx context.Context) (dtos.Balance, error) {
 	return nil, nil
 }
 
-func (s *BalancesService) Withdraw(ctx context.Context) error {
+func (s *BalancesService) Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 

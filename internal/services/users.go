@@ -2,19 +2,23 @@ package services
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
 )
 
-type UsersService struct {
-	repo interfaces.UsersRepository
-}
-
 func NewUsersService(r interfaces.UsersRepository) *UsersService {
 	return &UsersService{
-		repo: r,
+		repo:   r,
+		logger: adapters.GetLogger(),
 	}
+}
+
+type UsersService struct {
+	repo   interfaces.UsersRepository
+	logger *zap.SugaredLogger
 }
 
 func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentials) error {

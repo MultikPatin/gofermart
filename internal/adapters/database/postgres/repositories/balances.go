@@ -2,17 +2,21 @@ package repositories
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"main/internal/adapters"
 	"main/internal/interfaces"
 )
 
-type BalancesRepository struct {
-	db interfaces.Database
-}
-
 func NewBalancesRepository(db interfaces.Database) *BalancesRepository {
 	return &BalancesRepository{
-		db: db,
+		db:     db,
+		logger: adapters.GetLogger(),
 	}
+}
+
+type BalancesRepository struct {
+	db     interfaces.Database
+	logger *zap.SugaredLogger
 }
 
 func (s *BalancesRepository) Get(ctx context.Context) error {

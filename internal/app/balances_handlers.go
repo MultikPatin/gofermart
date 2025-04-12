@@ -3,7 +3,9 @@ package app
 import (
 	"github.com/mailru/easyjson"
 	"github.com/mailru/easyjson/jwriter"
+	"go.uber.org/zap"
 	"io"
+	"main/internal/adapters"
 	"main/internal/constants"
 	"main/internal/dtos"
 	"main/internal/interfaces"
@@ -14,11 +16,13 @@ import (
 func NewBalancesHandler(s interfaces.BalancesService) *BalancesHandler {
 	return &BalancesHandler{
 		service: s,
+		logger:  adapters.GetLogger(),
 	}
 }
 
 type BalancesHandler struct {
 	service interfaces.BalancesService
+	logger  *zap.SugaredLogger
 }
 
 func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {

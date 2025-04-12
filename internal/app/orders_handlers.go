@@ -2,7 +2,9 @@ package app
 
 import (
 	"github.com/mailru/easyjson/jwriter"
+	"go.uber.org/zap"
 	"io"
+	"main/internal/adapters"
 	"main/internal/constants"
 	"main/internal/interfaces"
 	"main/internal/schemas"
@@ -12,11 +14,13 @@ import (
 func NewOrdersHandler(s interfaces.OrdersService) *OrdersHandler {
 	return &OrdersHandler{
 		service: s,
+		logger:  adapters.GetLogger(),
 	}
 }
 
 type OrdersHandler struct {
 	service interfaces.OrdersService
+	logger  *zap.SugaredLogger
 }
 
 func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {

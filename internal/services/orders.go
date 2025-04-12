@@ -2,19 +2,23 @@ package services
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
 )
 
-type OrdersService struct {
-	repo interfaces.OrdersRepository
-}
-
 func NewOrdersService(r interfaces.OrdersRepository) *OrdersService {
 	return &OrdersService{
-		repo: r,
+		repo:   r,
+		logger: adapters.GetLogger(),
 	}
+}
+
+type OrdersService struct {
+	repo   interfaces.OrdersRepository
+	logger *zap.SugaredLogger
 }
 
 func (s *OrdersService) Add(ctx context.Context, OrderID string) error {

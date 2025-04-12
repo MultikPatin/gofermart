@@ -2,17 +2,21 @@ package repositories
 
 import (
 	"context"
+	"go.uber.org/zap"
+	"main/internal/adapters"
 	"main/internal/interfaces"
 )
 
-type UsersRepository struct {
-	db interfaces.Database
-}
-
 func NewUsersRepository(db interfaces.Database) *UsersRepository {
 	return &UsersRepository{
-		db: db,
+		db:     db,
+		logger: adapters.GetLogger(),
 	}
+}
+
+type UsersRepository struct {
+	db     interfaces.Database
+	logger *zap.SugaredLogger
 }
 
 func (s *UsersRepository) Login(ctx context.Context) error {
