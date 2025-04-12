@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
 )
@@ -16,7 +17,7 @@ func NewUsersService(r interfaces.UsersRepository) *UsersService {
 	}
 }
 
-func (s *UsersService) Login(ctx context.Context) error {
+func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentials) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -28,7 +29,7 @@ func (s *UsersService) Login(ctx context.Context) error {
 	return nil
 }
 
-func (s *UsersService) Register(ctx context.Context) error {
+func (s *UsersService) Register(ctx context.Context, credentials dtos.AuthCredentials) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
@@ -40,14 +41,14 @@ func (s *UsersService) Register(ctx context.Context) error {
 	return nil
 }
 
-func (s *UsersService) Withdrawals(ctx context.Context) error {
+func (s *UsersService) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	err := s.repo.Withdrawals(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return nil, nil
 }

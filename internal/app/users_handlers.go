@@ -1,12 +1,13 @@
 package app
 
 import (
-	"errors"
 	"github.com/mailru/easyjson"
-	"log"
+	"github.com/mailru/easyjson/jwriter"
+	"io"
+	"main/internal/constants"
+	"main/internal/dtos"
 	"main/internal/interfaces"
 	"main/internal/schemas"
-	"main/internal/services"
 	"net/http"
 )
 
@@ -28,25 +29,31 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	authCredentials := &schemas.AuthCredentials{}
-	err = easyjson.Unmarshal(inputJSON, authCredentials)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		log.Fatalf("Не удалось спарсить json: %v", err)
-	}
-
-	originLink, err := h.service.Register(ctx, r.PathValue("id"))
-	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	authCredentials := &schemas.AuthCredentials{}
+	err = easyjson.Unmarshal(body, authCredentials)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = h.service.Register(ctx, dtos.AuthCredentials(*authCredentials))
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//http.StatusConflict
+	//http.StatusInternalServerError
+	//http.StatusBadRequest
+	//http.StatusOK
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
@@ -57,19 +64,32 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.Login(ctx, r.PathValue("id"))
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	authCredentials := &schemas.AuthCredentials{}
+	err = easyjson.Unmarshal(body, authCredentials)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = h.service.Login(ctx, dtos.AuthCredentials(*authCredentials))
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//http.StatusConflict
+	//http.StatusInternalServerError
+	//http.StatusBadRequest
+	//http.StatusOK
+
+	w.WriteHeader(http.StatusOK)
 }
 
 func (h *UsersHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
@@ -80,17 +100,49 @@ func (h *UsersHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	originLink, err := h.service.Withdrawals(ctx, r.PathValue("id"))
+	results, err := h.service.Withdrawals(ctx)
 	if err != nil {
-		if errors.Is(err, services.ErrDeletedLink) {
-			http.Error(w, "Origin is deleted", http.StatusGone)
-		} else {
-			http.Error(w, "Origin not found", http.StatusNotFound)
-		}
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("content-type", constants.TextContentType)
-	w.Header().Set("Location", originLink)
-	w.WriteHeader(http.StatusTemporaryRedirect)
+	if len(results) == 0 {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+
+	items := make([]schemas.Withdrawal, 0, len(results))
+	for i := 0; i < len(results); i++ {
+		items = append(items, schemas.Withdrawal(*results[i]))
+	}
+
+	var writer jwriter.Writer
+	err = MarshalSliceEasyJSON(items, &writer)
+	if err != nil {
+		// add log
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	//http.StatusOK
+	//http.StatusNoContent
+	//http.StatusUnauthorized
+	//http.StatusInternalServerError
+
+	w.Header().Set("content-type", constants.JSONContentType)
+	w.WriteHeader(http.StatusOK)
+	w.Write(writer.Buffer.BuildBytes())
+}
+
+func MarshalSliceEasyJSON(v []schemas.Withdrawal, wr *jwriter.Writer) error {
+	wr.RawByte('[')
+	for i, w := range v {
+		if i > 0 {
+			wr.RawByte(',')
+		}
+		w.MarshalEasyJSON(wr)
+	}
+	wr.RawByte(']')
+	return nil
 }
