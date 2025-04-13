@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"main/internal/schemas"
+	"main/internal/services"
 	"net/http"
 )
 
@@ -45,12 +47,18 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 	}
 	err = h.service.Register(ctx, dtos.AuthCredentials(*authCredentials))
 	if err != nil {
-		h.logger.Infow(
-			"Register user",
-			"error", err.Error(),
-		)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		switch {
+		case errors.Is(err, services.ErrLoginAlreadyExists):
+			w.WriteHeader(http.StatusConflict)
+			return
+		default:
+			h.logger.Infow(
+				"Register user",
+				"error", err.Error(),
+			)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	//200 — пользователь успешно зарегистрирован и аутентифицирован;
@@ -84,12 +92,18 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Login(ctx, dtos.AuthCredentials(*authCredentials))
 	if err != nil {
-		h.logger.Infow(
-			"Login user",
-			"error", err.Error(),
-		)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		switch {
+		case errors.Is(err, services.ErrAuthCredentialsIsNotValid):
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		default:
+			h.logger.Infow(
+				"Login user",
+				"error", err.Error(),
+			)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	//200 — пользователь успешно аутентифицирован;

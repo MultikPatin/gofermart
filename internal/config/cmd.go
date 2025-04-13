@@ -4,7 +4,7 @@ import "flag"
 
 const (
 	defaultAddr        = "localhost:8080"
-	defaultPostgresDNS = "postgresql://postgres:postgres@localhost:5432/test"
+	defaultPostgresDNS = "postgresql://postgres:postgres@localhost:5432/gofermart"
 )
 
 type cmdConfig struct {

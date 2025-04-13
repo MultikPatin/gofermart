@@ -2,11 +2,16 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
+)
+
+var (
+	ErrPaymentRequired = errors.New("no more balance to withdraw")
 )
 
 func NewBalancesService(r interfaces.BalancesRepository) *BalancesService {

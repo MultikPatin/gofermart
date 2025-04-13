@@ -2,11 +2,17 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
+)
+
+var (
+	ErrLoginAlreadyExists        = errors.New("login already exists")
+	ErrAuthCredentialsIsNotValid = errors.New("login or password is not valid")
 )
 
 func NewUsersService(r interfaces.UsersRepository) *UsersService {

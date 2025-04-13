@@ -2,11 +2,18 @@ package services
 
 import (
 	"context"
+	"errors"
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"time"
+)
+
+var (
+	ErrOrderAlreadyExists              = errors.New("order already exists")
+	ErrOrderAlreadyLoadedByAnotherUser = errors.New("order already loaded by another user")
+	ErrOrderIDNotValid                 = errors.New("order id is not valid")
 )
 
 func NewOrdersService(r interfaces.OrdersRepository) *OrdersService {

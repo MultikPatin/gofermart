@@ -1,6 +1,7 @@
 package app
 
 import (
+	"errors"
 	"github.com/mailru/easyjson/jwriter"
 	"go.uber.org/zap"
 	"io"
@@ -8,6 +9,7 @@ import (
 	"main/internal/constants"
 	"main/internal/interfaces"
 	"main/internal/schemas"
+	"main/internal/services"
 	"net/http"
 )
 
@@ -41,12 +43,24 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 
 	err = h.service.Add(ctx, OrderID)
 	if err != nil {
-		h.logger.Infow(
-			"Order add",
-			"error", err.Error(),
-		)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		switch {
+		case errors.Is(err, services.ErrOrderAlreadyExists):
+			w.WriteHeader(http.StatusOK)
+			return
+		case errors.Is(err, services.ErrOrderAlreadyLoadedByAnotherUser):
+			w.WriteHeader(http.StatusConflict)
+			return
+		case errors.Is(err, services.ErrOrderIDNotValid):
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			return
+		default:
+			h.logger.Infow(
+				"Order add",
+				"error", err.Error(),
+			)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 	}
 
 	//200 — номер заказа уже был загружен этим пользователем;

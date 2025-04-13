@@ -13,7 +13,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data/
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U postgres -d test" ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d gofermart" ]
       interval: 10s
       timeout: 3s
       retries: 3
@@ -30,4 +30,4 @@ networks:
   services:
 
 
-#postgresql://postgres:postgres@localhost:5432/test_db
+#postgresql://postgres:postgres@localhost:5432/gofermart
