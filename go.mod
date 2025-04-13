@@ -5,6 +5,7 @@ go 1.22.12
 require (
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/go-chi/chi/v5 v5.2.1
+	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/jackc/pgx/v5 v5.7.4
 	github.com/mailru/easyjson v0.9.0
 	go.uber.org/zap v1.27.0

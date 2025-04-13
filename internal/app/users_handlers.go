@@ -2,15 +2,19 @@ package app
 
 import (
 	"errors"
+	"fmt"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/mailru/easyjson"
 	"go.uber.org/zap"
 	"io"
 	"main/internal/adapters"
+	"main/internal/constants"
 	"main/internal/dtos"
 	"main/internal/interfaces"
 	"main/internal/schemas"
 	"main/internal/services"
 	"net/http"
+	"time"
 )
 
 func NewUsersHandler(s interfaces.UsersService) *UsersHandler {
@@ -45,7 +49,8 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.service.Register(ctx, dtos.AuthCredentials(*authCredentials))
+
+	userID, err := h.service.Register(ctx, dtos.AuthCredentials(*authCredentials))
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrLoginAlreadyExists):
@@ -61,11 +66,22 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	cookie, err := setJWTCookie(userID)
+	if err != nil {
+		h.logger.Infow(
+			"Set jwt cookie",
+			"error", err.Error(),
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	//200 — пользователь успешно зарегистрирован и аутентифицирован;
 	//400 — неверный формат запроса;
 	//409 — логин уже занят;
 	//500 — внутренняя ошибка сервера.
 
+	http.SetCookie(w, cookie)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -90,7 +106,7 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Login(ctx, dtos.AuthCredentials(*authCredentials))
+	userID, err := h.service.Login(ctx, dtos.AuthCredentials(*authCredentials))
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrAuthCredentialsIsNotValid):
@@ -106,10 +122,54 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	cookie, err := setJWTCookie(userID)
+	if err != nil {
+		h.logger.Infow(
+			"Set jwt cookie",
+			"error", err.Error(),
+		)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	//200 — пользователь успешно аутентифицирован;
 	//400 — неверный формат запроса;
 	//401 — неверная пара логин/пароль;
 	//500 — внутренняя ошибка сервера.
 
+	http.SetCookie(w, cookie)
 	w.WriteHeader(http.StatusOK)
+}
+
+func setJWTCookie(userID int64) (*http.Cookie, error) {
+	tokenStr, err := generateJWT(userID)
+	if err != nil {
+		return nil, err
+	}
+	cookie := http.Cookie{
+		Name:     "access_token",
+		Value:    tokenStr,
+		Path:     "/",
+		HttpOnly: true,
+		MaxAge:   constants.CookieMaxAge,
+	}
+	return &cookie, nil
+}
+
+func generateJWT(userID int64) (string, error) {
+	expirationTime := time.Now().Add(constants.TokenExp)
+	claims := &schemas.Claims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := token.SignedString([]byte(constants.JwtSecret))
+	if err != nil {
+		fmt.Println(err)
+		return "", err
+	}
+
+	return tokenString, nil
 }

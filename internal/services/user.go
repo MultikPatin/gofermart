@@ -27,26 +27,46 @@ type UsersService struct {
 	logger *zap.SugaredLogger
 }
 
-func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentials) error {
+func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentials) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Login(ctx)
+	user, err := s.repo.GetByLogin(ctx, credentials.Login)
 	if err != nil {
-		return err
+		return -1, err
 	}
 
-	return nil
+	// обработать если пользователь не найден
+
+	if !isEqualPasswords(credentials.Password, user.Password) {
+		return -1, ErrAuthCredentialsIsNotValid
+	}
+
+	return user.ID, nil
 }
 
-func (s *UsersService) Register(ctx context.Context, credentials dtos.AuthCredentials) error {
+func (s *UsersService) Register(ctx context.Context, credentials dtos.AuthCredentials) (int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Register(ctx)
+	hash, err := hashPassword(credentials.Password)
 	if err != nil {
-		return err
+		return -1, err
+	}
+	credentials.Password = hash
+
+	userID, err := s.repo.Add(ctx, credentials)
+	if err != nil {
+		return -1, err
 	}
 
-	return nil
+	return userID, nil
+}
+
+func isEqualPasswords(password string, hash string) bool {
+	return true
+}
+
+func hashPassword(password string) (string, error) {
+	return "", nil
 }

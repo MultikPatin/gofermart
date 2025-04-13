@@ -5,6 +5,7 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
+	"main/internal/dtos"
 	"main/internal/interfaces"
 )
 
@@ -20,12 +21,12 @@ type UsersRepository struct {
 	logger *zap.SugaredLogger
 }
 
-func (s *UsersRepository) Login(ctx context.Context) error {
+func (s *UsersRepository) GetByLogin(ctx context.Context, login string) (dtos.User, error) {
 
-	return nil
+	return dtos.User{}, nil
 }
 
-func (s *UsersRepository) Register(ctx context.Context) error {
+func (s *UsersRepository) Add(ctx context.Context, credentials dtos.AuthCredentials) (int64, error) {
 
-	return nil
+	return 0, nil
 }

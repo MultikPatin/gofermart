@@ -17,6 +17,6 @@ type OrdersService interface {
 }
 
 type UsersService interface {
-	Register(ctx context.Context, credentials dtos.AuthCredentials) error
-	Login(ctx context.Context, credentials dtos.AuthCredentials) error
+	Register(ctx context.Context, credentials dtos.AuthCredentials) (int64, error)
+	Login(ctx context.Context, credentials dtos.AuthCredentials) (int64, error)
 }
