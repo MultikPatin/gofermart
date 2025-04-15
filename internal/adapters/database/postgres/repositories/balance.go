@@ -5,10 +5,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
-	"main/internal/interfaces"
+	"main/internal/adapters/database/postgres"
 )
 
-func NewBalancesRepository(db interfaces.Database) *BalancesRepository {
+func NewBalancesRepository(db *postgres.Database) *BalancesRepository {
 	return &BalancesRepository{
 		db:     db,
 		logger: adapters.GetLogger(),
@@ -16,7 +16,7 @@ func NewBalancesRepository(db interfaces.Database) *BalancesRepository {
 }
 
 type BalancesRepository struct {
-	db     interfaces.Database
+	db     *postgres.Database
 	logger *zap.SugaredLogger
 }
 

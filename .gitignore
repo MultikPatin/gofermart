@@ -22,4 +22,4 @@ vendor/
 .idea
 
 # Easyjson
-*_easyjson.go
+#*_easyjson.go

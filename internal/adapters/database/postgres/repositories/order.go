@@ -5,10 +5,10 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
-	"main/internal/interfaces"
+	"main/internal/adapters/database/postgres"
 )
 
-func NewOrdersRepository(db interfaces.Database) *OrdersRepository {
+func NewOrdersRepository(db *postgres.Database) *OrdersRepository {
 	return &OrdersRepository{
 		db:     db,
 		logger: adapters.GetLogger(),
@@ -16,7 +16,7 @@ func NewOrdersRepository(db interfaces.Database) *OrdersRepository {
 }
 
 type OrdersRepository struct {
-	db     interfaces.Database
+	db     *postgres.Database
 	logger *zap.SugaredLogger
 }
 
