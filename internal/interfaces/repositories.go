@@ -18,5 +18,5 @@ type OrdersRepository interface {
 
 type UsersRepository interface {
 	Add(ctx context.Context, credentials dtos.AuthCredentials) (int64, error)
-	GetByLogin(ctx context.Context, login string) (dtos.User, error)
+	GetByLogin(ctx context.Context, login string) (*dtos.User, error)
 }

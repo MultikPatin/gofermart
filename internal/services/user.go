@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"go.uber.org/zap"
+	"golang.org/x/crypto/bcrypt"
 	"main/internal/adapters"
 	"main/internal/dtos"
 	"main/internal/interfaces"
@@ -36,8 +37,6 @@ func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentia
 		return -1, err
 	}
 
-	// обработать если пользователь не найден
-
 	if !isEqualPasswords(credentials.Password, user.Password) {
 		return -1, ErrAuthCredentialsIsNotValid
 	}
@@ -64,9 +63,14 @@ func (s *UsersService) Register(ctx context.Context, credentials dtos.AuthCreden
 }
 
 func isEqualPasswords(password string, hash string) bool {
-	return true
+	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+	return err == nil
 }
 
 func hashPassword(password string) (string, error) {
-	return "", nil
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", err
+	}
+	return string(hashedBytes), nil
 }
