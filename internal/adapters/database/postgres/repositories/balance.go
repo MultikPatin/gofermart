@@ -6,6 +6,9 @@ import (
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/adapters/database/postgres"
+	"main/internal/constants"
+	"main/internal/dtos"
+	"time"
 )
 
 func NewBalancesRepository(db *postgres.Database) *BalancesRepository {
@@ -20,17 +23,59 @@ type BalancesRepository struct {
 	logger *zap.SugaredLogger
 }
 
-func (s *BalancesRepository) Get(ctx context.Context) error {
+func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
+	query := `
+	SELECT
+		SUM(CASE WHEN action = 'deposit' THEN amount ELSE 0 END) AS current,
+    	ABS(SUM(CASE WHEN action = 'withdrawal' THEN amount ELSE 0 END)) AS withdrawn
+	FROM balances
+	WHERE user_id = $1;`
 
+	result := new(dtos.Balance)
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	row := r.db.Connection.QueryRowContext(ctx, query, userID)
+	err := row.Scan(&result.Current, &result.Withdraw)
+	if err == nil {
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error {
+	// если заказ не найден в таблице orders
+	//err := services.ErrOrderIDNotValid
 	return nil
 }
 
-func (s *BalancesRepository) Withdraw(ctx context.Context) error {
+func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
+	query := `
+    SELECT order_id, amount, processed_at
+    FROM balances
+    WHERE action = 'withdrawal' and user_id = $1
+    ORDER BY processed_at DESC;`
 
-	return nil
-}
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
 
-func (s *BalancesRepository) Withdrawals(ctx context.Context) error {
+	var processedAt time.Time
+	var withdrawals []*dtos.Withdrawal
 
-	return nil
+	for rows.Next() {
+		w := new(dtos.Withdrawal)
+		err := rows.Scan(&w.Order, &w.Sum, &processedAt)
+		if err != nil {
+			return nil, err
+		}
+		w.Processed = processedAt.Format(time.RFC3339)
+		withdrawals = append(withdrawals, w)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return withdrawals, nil
 }

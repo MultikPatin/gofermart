@@ -6,7 +6,7 @@ import (
 )
 
 type BalancesService interface {
-	Get(ctx context.Context) (dtos.Balance, error)
+	Get(ctx context.Context) (*dtos.Balance, error)
 	Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error
 	Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error)
 }

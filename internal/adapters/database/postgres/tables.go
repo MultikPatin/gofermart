@@ -19,7 +19,18 @@ const (
 		    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		    order_id VARCHAR(255) NOT NULL,
 		    action VARCHAR(32) NOT NULL,
-		    sum INTEGER NOT NULL
+		    amount INTEGER NOT NULL
 		);
+		DO
+		
+		$$
+		BEGIN
+			CREATE TYPE balance_actions_enum AS ENUM ('deposit', 'withdrawal');
+		EXCEPTION WHEN duplicate_object THEN
+			RAISE NOTICE 'Тип данных balance_actions_enum уже существует.';
+		END
+		
+		$$;
+		ALTER TABLE balances ALTER COLUMN action TYPE balance_actions_enum USING action::balance_actions_enum;
 		`
 )

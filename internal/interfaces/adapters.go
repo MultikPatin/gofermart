@@ -8,5 +8,5 @@ type Database interface {
 }
 
 type LoyaltyCalculation interface {
-	GetByOrderID(orderID string) (dtos.LoyaltyCalculation, error)
+	GetByOrderID(orderID string) (*dtos.LoyaltyCalculation, error)
 }

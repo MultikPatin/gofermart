@@ -20,7 +20,8 @@ type OrdersRepository struct {
 	logger *zap.SugaredLogger
 }
 
-func (s *OrdersRepository) Add(ctx context.Context) error {
+func (s *OrdersRepository) Add(ctx context.Context, OrderID string) error {
+	//userID := ctx.Value(constants.UserIDKey).(int64)
 
 	return nil
 }

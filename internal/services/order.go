@@ -16,23 +16,27 @@ var (
 	ErrOrderIDNotValid                 = errors.New("order id is not valid")
 )
 
-func NewOrdersService(r interfaces.OrdersRepository) *OrdersService {
+func NewOrdersService(r interfaces.OrdersRepository, lc interfaces.LoyaltyCalculation) *OrdersService {
 	return &OrdersService{
 		repo:   r,
 		logger: adapters.GetLogger(),
+		lc:     lc,
 	}
 }
 
 type OrdersService struct {
 	repo   interfaces.OrdersRepository
 	logger *zap.SugaredLogger
+	lc     interfaces.LoyaltyCalculation
 }
 
 func (s *OrdersService) Add(ctx context.Context, OrderID string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Add(ctx)
+	//TODO Номер заказа может быть проверен на корректность ввода с помощью алгоритма Луна.
+
+	err := s.repo.Add(ctx, OrderID)
 	if err != nil {
 		return err
 	}

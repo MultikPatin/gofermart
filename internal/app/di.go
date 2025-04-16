@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/go-chi/chi/v5"
+	"main/internal/adapters/clients"
 	"main/internal/adapters/database/postgres"
 	"main/internal/adapters/database/postgres/repositories"
 	"main/internal/config"
@@ -87,8 +88,12 @@ func NewServices(c *config.Config) (*Services, error) {
 	if err != nil {
 		return nil, err
 	}
+	cl, err := NewAClients(c)
+	if err != nil {
+		return nil, err
+	}
 	return &Services{
-		orders:     services.NewOrdersService(r.orders),
+		orders:     services.NewOrdersService(r.orders, cl.loyalty),
 		balances:   services.NewBalancesService(r.balances),
 		users:      services.NewUsersService(r.users),
 		Repository: r,
@@ -105,5 +110,15 @@ func NewRepositories(c *config.Config) (*Repositories, error) {
 		users:    repositories.NewUsersRepository(db),
 		balances: repositories.NewBalancesRepository(db),
 		Database: db,
+	}, nil
+}
+
+type Clients struct {
+	loyalty interfaces.LoyaltyCalculation
+}
+
+func NewAClients(c *config.Config) (*Clients, error) {
+	return &Clients{
+		loyalty: clients.NewLoyaltyCalculation(c.AccrualSystemAddr),
 	}, nil
 }

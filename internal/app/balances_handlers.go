@@ -35,6 +35,12 @@ func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	if userID <= 0 {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	result, err := h.service.Get(ctx)
 	if err != nil {
 		h.logger.Infow(
@@ -44,7 +50,7 @@ func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	resp, err := easyjson.Marshal(schemas.Balance(result))
+	resp, err := easyjson.Marshal(schemas.Balance(*result))
 	if err != nil {
 		h.logger.Infow(
 			"Balance get Marshal",
@@ -68,6 +74,12 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	if userID <= 0 {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 
@@ -117,6 +129,12 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	if userID <= 0 {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

@@ -33,6 +33,12 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	if userID <= 0 {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -79,6 +85,12 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+		return
+	}
+
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	if userID <= 0 {
+		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
 

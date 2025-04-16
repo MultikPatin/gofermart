@@ -6,13 +6,13 @@ import (
 )
 
 type BalancesRepository interface {
-	Get(ctx context.Context) error
-	Withdraw(ctx context.Context) error
-	Withdrawals(ctx context.Context) error
+	Get(ctx context.Context) (*dtos.Balance, error)
+	Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error
+	Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error)
 }
 
 type OrdersRepository interface {
-	Add(ctx context.Context) error
+	Add(ctx context.Context, OrderID string) error
 	GetAll(ctx context.Context) error
 }
 

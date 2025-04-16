@@ -26,23 +26,32 @@ type BalancesService struct {
 	logger *zap.SugaredLogger
 }
 
-func (s *BalancesService) Get(ctx context.Context) (dtos.Balance, error) {
+func (s *BalancesService) Get(ctx context.Context) (*dtos.Balance, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Get(ctx)
+	balance, err := s.repo.Get(ctx)
 	if err != nil {
-		return dtos.Balance{}, err
+		return nil, err
 	}
 
-	return dtos.Balance{}, nil
+	return balance, nil
 }
 
 func (s *BalancesService) Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Withdraw(ctx)
+	balance, err := s.repo.Get(ctx)
+	if err != nil {
+		return err
+	}
+
+	if balance.Current < withdrawal.Sum {
+		return ErrPaymentRequired
+	}
+
+	err = s.repo.Withdraw(ctx, withdrawal)
 	if err != nil {
 		return err
 	}
@@ -54,10 +63,10 @@ func (s *BalancesService) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, 
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	err := s.repo.Withdrawals(ctx)
+	results, err := s.repo.Withdrawals(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	return nil, nil
+	return results, nil
 }
