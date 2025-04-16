@@ -34,6 +34,9 @@ func NewDatabase(DNS *url.URL) (*Database, error) {
 
 	host := DNS.Hostname()
 	port := DNS.Port()
+	if port == "" {
+		port = "5432"
+	}
 	user := DNS.User.Username()
 	password, _ := DNS.User.Password()
 	dbname := DNS.Path[1:]
