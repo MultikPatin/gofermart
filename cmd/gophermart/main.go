@@ -12,6 +12,10 @@ func main() {
 	defer adapters.SyncLogger()
 
 	c := config.Parse(logger)
+	logger.Infow(
+		"Parsing config",
+		"config", c,
+	)
 
 	shorterApp, err := app.NewApp(c)
 	if err != nil {
