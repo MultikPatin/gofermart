@@ -36,7 +36,7 @@ func (s *OrdersService) Add(ctx context.Context, OrderID string) error {
 
 	//TODO Номер заказа может быть проверен на корректность ввода с помощью алгоритма Луна.
 
-	err := s.repo.Add(ctx, OrderID)
+	_, err := s.repo.Add(ctx, OrderID)
 	if err != nil {
 		return err
 	}
