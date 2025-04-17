@@ -35,8 +35,8 @@ func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ctx.Value(constants.UserIDKey).(int64)
-	if userID <= 0 {
+	UserAuth := ctx.Value(constants.UserAuth).(bool)
+	if !UserAuth {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -77,8 +77,8 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ctx.Value(constants.UserIDKey).(int64)
-	if userID <= 0 {
+	UserAuth := ctx.Value(constants.UserAuth).(bool)
+	if !UserAuth {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}
@@ -132,8 +132,8 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID := ctx.Value(constants.UserIDKey).(int64)
-	if userID <= 0 {
+	UserAuth := ctx.Value(constants.UserAuth).(bool)
+	if !UserAuth {
 		w.WriteHeader(http.StatusUnauthorized)
 		return
 	}

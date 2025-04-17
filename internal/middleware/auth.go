@@ -15,18 +15,21 @@ func Authentication(next http.Handler) http.Handler {
 		cookie, err := r.Cookie("access_token")
 		if err != nil || cookie == nil {
 			userID := -1
-			ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			ctxUserID := context.WithValue(r.Context(), constants.UserIDKey, userID)
+			ctxUserAuth := context.WithValue(ctxUserID, constants.UserAuth, false)
+			next.ServeHTTP(w, r.WithContext(ctxUserAuth))
 		} else {
 			tokenStr := cookie.Value
 			claims, err := verifyJWT(tokenStr)
 			if err != nil {
 				userID := -1
-				ctx := context.WithValue(r.Context(), constants.UserIDKey, userID)
-				next.ServeHTTP(w, r.WithContext(ctx))
+				ctxUserID := context.WithValue(r.Context(), constants.UserIDKey, userID)
+				ctxUserAuth := context.WithValue(ctxUserID, constants.UserAuth, false)
+				next.ServeHTTP(w, r.WithContext(ctxUserAuth))
 			}
-			ctx := context.WithValue(r.Context(), constants.UserIDKey, claims.UserID)
-			next.ServeHTTP(w, r.WithContext(ctx))
+			ctxUserID := context.WithValue(r.Context(), constants.UserIDKey, claims.UserID)
+			ctxUserAuth := context.WithValue(ctxUserID, constants.UserAuth, true)
+			next.ServeHTTP(w, r.WithContext(ctxUserAuth))
 		}
 	})
 }
