@@ -27,7 +27,7 @@ type BalancesService struct {
 }
 
 func (s *BalancesService) Get(ctx context.Context) (*dtos.Balance, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	balance, err := s.repo.Get(ctx)

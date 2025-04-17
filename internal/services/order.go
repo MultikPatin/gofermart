@@ -31,7 +31,7 @@ type OrdersService struct {
 }
 
 func (s *OrdersService) Add(ctx context.Context, OrderID string) error {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	//TODO Номер заказа может быть проверен на корректность ввода с помощью алгоритма Луна.
