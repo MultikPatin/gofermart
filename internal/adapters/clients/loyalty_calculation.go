@@ -2,7 +2,13 @@ package clients
 
 import (
 	"context"
+	"fmt"
+	"github.com/mailru/easyjson"
+	"io"
 	"main/internal/dtos"
+	"main/internal/schemas"
+	"net/http"
+	"strings"
 )
 
 type LoyaltyCalculation struct {
@@ -16,50 +22,40 @@ func NewLoyaltyCalculation(Addr string) *LoyaltyCalculation {
 }
 
 func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (*dtos.LoyaltyCalculation, error) {
-	return nil, nil
-}
+	endpoint := fmt.Sprintf("%s/api/orders/%s", l.accrualSystemAddr, orderID)
+	client := &http.Client{}
 
-//
-//func main() {
-//	endpoint := "http://localhost:8080/"
-//	// контейнер данных для запроса
-//	data := url.Values{}
-//	// приглашение в консоли
-//	fmt.Println("Введите длинный Origin")
-//	// открываем потоковое чтение из консоли
-//	reader := bufio.NewReader(os.Stdin)
-//	// читаем строку из консоли
-//	long, err := reader.ReadString('\n')
-//	if err != nil {
-//		panic(err)
-//	}
-//	long = strings.TrimSuffix(long, "\n")
-//	// заполняем контейнер данными
-//	data.Set("url", long)
-//	// добавляем HTTP-клиент
-//	client := &http.Client{}
-//	// пишем запрос
-//	// запрос методом POST должен, помимо заголовков, содержать тело
-//	// тело должно быть источником потокового чтения io.Reader
-//	request, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(data.Encode()))
-//	if err != nil {
-//		panic(err)
-//	}
-//	// в заголовках запроса указываем кодировку
-//	request.Header.Add("Content-Type", "application/x-www-form-urlencoded")
-//	// отправляем запрос и получаем ответ
-//	response, err := client.Do(request)
-//	if err != nil {
-//		panic(err)
-//	}
-//	// выводим код ответа
-//	fmt.Println("Статус-код ", response.Status)
-//	defer response.Body.Close()
-//	// читаем поток из тела ответа
-//	body, err := io.ReadAll(response.Body)
-//	if err != nil {
-//		panic(err)
-//	}
-//	// и печатаем его
-//	fmt.Println(string(body))
-//}
+	request, err := http.NewRequest(http.MethodGet, endpoint, strings.NewReader(""))
+	if err != nil {
+		return nil, err
+	}
+
+	response, err := client.Do(request)
+	if err != nil {
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	loyalty := &schemas.LoyaltyCalculation{}
+	err = easyjson.Unmarshal(body, loyalty)
+	if err != nil {
+		return nil, err
+	}
+
+	result := dtos.LoyaltyCalculation{
+		OrderBase: dtos.OrderBase{
+			Number: loyalty.Number,
+		},
+		OrderStatus: dtos.OrderStatus{
+			Status:  loyalty.Status,
+			Accrual: loyalty.Accrual,
+		},
+	}
+
+	return &result, nil
+}

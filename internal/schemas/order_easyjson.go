@@ -184,3 +184,83 @@ func (v *Order) UnmarshalJSON(data []byte) error {
 func (v *Order) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjson120d1ca2DecodeMainInternalSchemas1(l, v)
 }
+func easyjson120d1ca2DecodeMainInternalSchemas2(in *jlexer.Lexer, out *LoyaltyCalculation) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "order":
+			out.Number = string(in.String())
+		case "status":
+			out.Status = string(in.String())
+		case "accrual":
+			out.Accrual = float32(in.Float32())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjson120d1ca2EncodeMainInternalSchemas2(out *jwriter.Writer, in LoyaltyCalculation) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"order\":"
+		out.RawString(prefix[1:])
+		out.String(string(in.Number))
+	}
+	{
+		const prefix string = ",\"status\":"
+		out.RawString(prefix)
+		out.String(string(in.Status))
+	}
+	{
+		const prefix string = ",\"accrual\":"
+		out.RawString(prefix)
+		out.Float32(float32(in.Accrual))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v LoyaltyCalculation) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjson120d1ca2EncodeMainInternalSchemas2(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v LoyaltyCalculation) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjson120d1ca2EncodeMainInternalSchemas2(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *LoyaltyCalculation) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjson120d1ca2DecodeMainInternalSchemas2(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *LoyaltyCalculation) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjson120d1ca2DecodeMainInternalSchemas2(l, v)
+}
