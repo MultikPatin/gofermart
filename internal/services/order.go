@@ -54,7 +54,7 @@ func (s *OrdersService) GetAll(ctx context.Context) ([]*dtos.Order, error) {
 	//INVALID — система расчёта вознаграждений отказала в расчёте;
 	//PROCESSED — данные по заказу проверены и информация о расчёте успешно получена.
 
-	err := s.repo.GetAll(ctx)
+	_, err := s.repo.GetAll(ctx)
 	if err != nil {
 		return nil, err
 	}

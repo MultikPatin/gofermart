@@ -1,20 +1,25 @@
 package dtos
 
-type Order struct {
-	Number   string
-	Status   string
-	Accrual  float32
+type OrderBase struct {
+	Number string
+}
+type OrderStatus struct {
+	Status  string
+	Accrual float32
+}
+
+type OrderBD struct {
+	ID int64
+	OrderBase
 	Uploaded string
 }
 
 type LoyaltyCalculation struct {
-	Number  string
-	Status  string
-	Accrual float32
+	OrderBase
+	OrderStatus
 }
 
-type OrderAccrual struct {
-	Order   int
-	Status  string
-	Accrual float32
+type Order struct {
+	OrderBD
+	OrderStatus
 }

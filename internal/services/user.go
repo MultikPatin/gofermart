@@ -28,7 +28,7 @@ type UsersService struct {
 	logger *zap.SugaredLogger
 }
 
-func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentials) (int64, error) {
+func (s *UsersService) Login(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
 
@@ -44,7 +44,7 @@ func (s *UsersService) Login(ctx context.Context, credentials dtos.AuthCredentia
 	return user.ID, nil
 }
 
-func (s *UsersService) Register(ctx context.Context, credentials dtos.AuthCredentials) (int64, error) {
+func (s *UsersService) Register(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 

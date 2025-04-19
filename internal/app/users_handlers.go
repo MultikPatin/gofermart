@@ -50,7 +50,9 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := h.service.Register(ctx, dtos.AuthCredentials(*authCredentials))
+	credentials := dtos.AuthCredentials(*authCredentials)
+
+	userID, err := h.service.Register(ctx, &credentials)
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrLoginAlreadyExists):
@@ -106,7 +108,9 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := h.service.Login(ctx, dtos.AuthCredentials(*authCredentials))
+	credentials := dtos.AuthCredentials(*authCredentials)
+
+	userID, err := h.service.Login(ctx, &credentials)
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrAuthCredentialsIsNotValid):

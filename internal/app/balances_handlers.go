@@ -96,7 +96,9 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = h.service.Withdraw(ctx, dtos.Withdraw(*withdraw))
+	withdrawData := dtos.Withdraw(*withdraw)
+
+	err = h.service.Withdraw(ctx, &withdrawData)
 	if err != nil {
 		switch {
 		case errors.Is(err, services.ErrPaymentRequired):

@@ -7,7 +7,7 @@ import (
 
 type BalancesService interface {
 	Get(ctx context.Context) (*dtos.Balance, error)
-	Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error
+	Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error
 	Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error)
 }
 
@@ -17,6 +17,6 @@ type OrdersService interface {
 }
 
 type UsersService interface {
-	Register(ctx context.Context, credentials dtos.AuthCredentials) (int64, error)
-	Login(ctx context.Context, credentials dtos.AuthCredentials) (int64, error)
+	Register(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error)
+	Login(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error)
 }

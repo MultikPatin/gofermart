@@ -38,7 +38,7 @@ func (s *BalancesService) Get(ctx context.Context) (*dtos.Balance, error) {
 	return balance, nil
 }
 
-func (s *BalancesService) Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error {
+func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 

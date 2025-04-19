@@ -6,7 +6,6 @@ type AuthCredentials struct {
 }
 
 type User struct {
-	ID       int64
-	Login    string
-	Password string
+	ID int64
+	AuthCredentials
 }

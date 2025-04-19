@@ -27,7 +27,11 @@ type UsersRepository struct {
 }
 
 func (r *UsersRepository) GetByLogin(ctx context.Context, login string) (*dtos.User, error) {
-	query := `SELECT id, login, password FROM users WHERE login=$1 LIMIT 1`
+	query := `
+	SELECT id, login, password 
+	FROM users 
+	WHERE login=$1 
+	LIMIT 1;`
 
 	user := new(dtos.User)
 	row := r.db.Connection.QueryRowContext(ctx, query, login)
@@ -43,8 +47,11 @@ func (r *UsersRepository) GetByLogin(ctx context.Context, login string) (*dtos.U
 	return user, nil
 }
 
-func (r *UsersRepository) Add(ctx context.Context, credentials dtos.AuthCredentials) (int64, error) {
-	query := `INSERT INTO users (login, password) VALUES ($1, $2) RETURNING id`
+func (r *UsersRepository) Add(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error) {
+	query := `
+	INSERT INTO users (login, password) 
+	VALUES ($1, $2) 
+	RETURNING id;`
 
 	var userID int64
 	err := r.db.Connection.QueryRowContext(ctx, query, credentials.Login, credentials.Password).Scan(&userID)

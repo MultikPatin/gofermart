@@ -9,7 +9,9 @@ import (
 	"main/internal/adapters"
 	"main/internal/adapters/database/postgres"
 	"main/internal/constants"
+	"main/internal/dtos"
 	"main/internal/services"
+	"time"
 )
 
 func NewOrdersRepository(db *postgres.Database) *OrdersRepository {
@@ -28,7 +30,10 @@ func (r *OrdersRepository) Add(ctx context.Context, OrderNumber string) (int64, 
 	userIDContext := ctx.Value(constants.UserIDKey).(int64)
 	orderExist := true
 
-	query := `SELECT user_id, order_id FROM orders WHERE order_id = $1`
+	query := `
+	SELECT user_id, order_id 
+	FROM orders 
+	WHERE order_id = $1;`
 
 	var userID int64
 	var orderID int64
@@ -51,7 +56,10 @@ func (r *OrdersRepository) Add(ctx context.Context, OrderNumber string) (int64, 
 		}
 	}
 
-	query = `INSERT INTO orders (user_id, order_id) VALUES ($1, $2) RETURNING id`
+	query = `
+	INSERT INTO orders (user_id, order_id) 
+	VALUES ($1, $2) 
+	RETURNING id;`
 
 	err = r.db.Connection.QueryRowContext(ctx, query, userIDContext, OrderNumber).Scan(&orderID)
 	if err != nil {
@@ -60,7 +68,34 @@ func (r *OrdersRepository) Add(ctx context.Context, OrderNumber string) (int64, 
 	return orderID, err
 }
 
-func (r *OrdersRepository) GetAll(ctx context.Context) error {
+func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderBD, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
 
-	return nil
+	query := `
+	SELECT id, order_id, uploaded_at 
+	FROM orders 
+	WHERE user_id = $1;`
+
+	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var uploadedAt time.Time
+	var orders []*dtos.OrderBD
+
+	for rows.Next() {
+		w := new(dtos.OrderBD)
+		err := rows.Scan(&w.ID, &w.Number, &uploadedAt)
+		if err != nil {
+			return nil, err
+		}
+		w.Uploaded = uploadedAt.Format(time.RFC3339)
+		orders = append(orders, w)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return orders, nil
 }

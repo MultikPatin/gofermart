@@ -24,6 +24,8 @@ type BalancesRepository struct {
 }
 
 func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+
 	query := `
 	SELECT
 		SUM(CASE WHEN action = 'deposit' THEN amount ELSE 0 END) AS current,
@@ -32,7 +34,6 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	WHERE user_id = $1;`
 
 	result := new(dtos.Balance)
-	userID := ctx.Value(constants.UserIDKey).(int64)
 	row := r.db.Connection.QueryRowContext(ctx, query, userID)
 	err := row.Scan(&result.Current, &result.Withdraw)
 	if err == nil {
@@ -42,20 +43,21 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	return result, nil
 }
 
-func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal dtos.Withdraw) error {
+func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error {
 	// если заказ не найден в таблице orders
 	//err := services.ErrOrderIDNotValid
 	return nil
 }
 
 func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+
 	query := `
     SELECT order_id, amount, processed_at
     FROM balances
     WHERE action = 'withdrawal' and user_id = $1
     ORDER BY processed_at DESC;`
 
-	userID := ctx.Value(constants.UserIDKey).(int64)
 	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
