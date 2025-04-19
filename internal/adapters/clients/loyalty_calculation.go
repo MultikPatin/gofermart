@@ -9,28 +9,34 @@ import (
 	"main/internal/schemas"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type LoyaltyCalculation struct {
 	accrualSystemAddr string
+	client            *http.Client
 }
 
 func NewLoyaltyCalculation(Addr string) *LoyaltyCalculation {
+	timeout := 3 * time.Second
+
 	return &LoyaltyCalculation{
 		accrualSystemAddr: Addr,
+		client: &http.Client{
+			Timeout: timeout,
+		},
 	}
 }
 
 func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (*dtos.LoyaltyCalculation, error) {
 	endpoint := fmt.Sprintf("%s/api/orders/%s", l.accrualSystemAddr, orderID)
-	client := &http.Client{}
 
 	request, err := http.NewRequest(http.MethodGet, endpoint, strings.NewReader(""))
 	if err != nil {
 		return nil, err
 	}
 
-	response, err := client.Do(request)
+	response, err := l.client.Do(request)
 	if err != nil {
 		return nil, err
 	}
