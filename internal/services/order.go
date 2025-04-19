@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"errors"
-	"fmt"
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/dtos"
@@ -93,13 +92,11 @@ func (s *OrdersService) GetAll(ctx context.Context) ([]*dtos.Order, error) {
 		close(resultChan)
 	}()
 
-	var errs []error
 	for err := range errChan {
-		errs = append(errs, err)
-	}
-
-	if len(errs) > 0 {
-		return nil, fmt.Errorf("get loyalty by order ids: %v", errs)
+		s.logger.Infow(
+			"Get all orders",
+			"errors", err.Error(),
+		)
 	}
 
 	for item := range resultChan {
