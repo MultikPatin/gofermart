@@ -11,6 +11,7 @@ const (
 		    id SERIAL PRIMARY KEY,
 		    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
 		    order_id VARCHAR(255) UNIQUE NOT NULL,
+			status VARCHAR(255) NOT NULL,
 		    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE TABLE IF NOT EXISTS balances (
@@ -32,5 +33,15 @@ const (
 		
 		$$;
 		ALTER TABLE balances ALTER COLUMN action TYPE balance_actions_enum USING action::balance_actions_enum;
-		`
+		DO
+		
+		$$
+		BEGIN
+			CREATE TYPE order_status_enum AS ENUM ('NEW', 'PROCESSING', 'INVALID', 'PROCESSED');
+		EXCEPTION WHEN duplicate_object THEN
+			RAISE NOTICE 'Тип данных order_status_enum уже существует.';
+		END
+		
+		$$;
+		ALTER TABLE orders ALTER COLUMN status TYPE order_status_enum USING status::order_status_enum;`
 )

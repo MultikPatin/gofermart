@@ -6,6 +6,7 @@ import (
 	"go.uber.org/zap"
 	"main/internal/adapters"
 	"main/internal/dtos"
+	"main/internal/enums"
 	"main/internal/interfaces"
 	"sync"
 	"time"
@@ -16,6 +17,7 @@ var (
 	ErrOrderAlreadyLoadedByAnotherUser = errors.New("order already loaded by another user")
 	ErrOrderIDNotValid                 = errors.New("order id is not valid")
 	ErrTooManyRequests                 = errors.New("too many requests to the client")
+	ErrUnknownStatus                   = errors.New("unknown order status")
 )
 
 func NewOrdersService(r interfaces.OrdersRepository, lc interfaces.LoyaltyCalculation) *OrdersService {
@@ -38,7 +40,12 @@ func (s *OrdersService) Add(ctx context.Context, OrderID string) error {
 
 	//TODO Номер заказа может быть проверен на корректность ввода с помощью алгоритма Луна.
 
-	_, err := s.repo.Add(ctx, OrderID)
+	orderCreate := &dtos.OrderCreate{
+		Number: OrderID,
+		Status: enums.OrderCreated,
+	}
+
+	_, err := s.repo.Add(ctx, orderCreate)
 	if err != nil {
 		return err
 	}
@@ -78,8 +85,13 @@ func (s *OrdersService) GetAll(ctx context.Context) ([]*dtos.Order, error) {
 				errChan <- err
 			} else {
 				resultChan <- &dtos.Order{
-					OrderDB:     *orderDB,
-					OrderStatus: loyalty.OrderStatus,
+					OrderDB: dtos.OrderDB{
+						ID:        orderDB.ID,
+						OrderBase: orderDB.OrderBase,
+						Status:    loyalty.Status,
+						Uploaded:  orderDB.Uploaded,
+					},
+					Accrual: loyalty.Accrual,
 				}
 			}
 

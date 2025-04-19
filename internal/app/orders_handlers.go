@@ -113,7 +113,7 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	for i := 0; i < len(results); i++ {
 		item := schemas.Order{
 			Number:   results[i].Number,
-			Status:   results[i].Status,
+			Status:   results[i].Status.String(),
 			Accrual:  results[i].Accrual,
 			Uploaded: results[i].Uploaded,
 		}

@@ -6,6 +6,7 @@ import (
 	"github.com/mailru/easyjson"
 	"io"
 	"main/internal/dtos"
+	"main/internal/enums"
 	"main/internal/schemas"
 	"main/internal/services"
 	"net/http"
@@ -63,12 +64,18 @@ func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (
 		return nil, fmt.Errorf("error when parsing accrual system response: %w", err)
 	}
 
+	status, ok := enums.OrdesStatusFromString(loyalty.Status)
+
+	if !ok {
+		return nil, services.ErrUnknownStatus
+	}
+
 	result := dtos.LoyaltyCalculation{
 		OrderBase: dtos.OrderBase{
 			Number: loyalty.Number,
 		},
 		OrderStatus: dtos.OrderStatus{
-			Status:  loyalty.Status,
+			Status:  status,
 			Accrual: loyalty.Accrual,
 		},
 	}

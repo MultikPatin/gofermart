@@ -12,7 +12,7 @@ type BalancesRepository interface {
 }
 
 type OrdersRepository interface {
-	Add(ctx context.Context, OrderID string) (int64, error)
+	Add(ctx context.Context, orderCreate *dtos.OrderCreate) (int64, error)
 	GetAll(ctx context.Context) ([]*dtos.OrderDB, error)
 }
 
