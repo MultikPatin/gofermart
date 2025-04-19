@@ -16,6 +16,7 @@ var (
 	ErrOrderAlreadyExists              = errors.New("order already exists")
 	ErrOrderAlreadyLoadedByAnotherUser = errors.New("order already loaded by another user")
 	ErrOrderIDNotValid                 = errors.New("order id is not valid")
+	ErrTooManyRequests                 = errors.New("too many requests to the client")
 )
 
 func NewOrdersService(r interfaces.OrdersRepository, lc interfaces.LoyaltyCalculation) *OrdersService {

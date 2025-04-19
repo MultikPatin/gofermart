@@ -7,6 +7,7 @@ import (
 	"io"
 	"main/internal/dtos"
 	"main/internal/schemas"
+	"main/internal/services"
 	"net/http"
 	"strings"
 	"time"
@@ -42,6 +43,15 @@ func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (
 	}
 	defer response.Body.Close()
 
+	if response.StatusCode != http.StatusOK {
+		switch response.StatusCode {
+		case http.StatusNoContent:
+			return nil, services.ErrOrderIDNotValid
+		case http.StatusTooManyRequests:
+			return nil, services.ErrTooManyRequests
+		}
+	}
+
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		return nil, fmt.Errorf("error when reading accrual system response body: %w", err)
@@ -50,7 +60,7 @@ func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (
 	loyalty := &schemas.LoyaltyCalculation{}
 	err = easyjson.Unmarshal(body, loyalty)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when parsing accrual system response: %w", err)
 	}
 
 	result := dtos.LoyaltyCalculation{
