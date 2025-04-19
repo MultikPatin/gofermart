@@ -29,7 +29,7 @@ type UsersService struct {
 }
 
 func (s *UsersService) Login(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
 	user, err := s.repo.GetByLogin(ctx, credentials.Login)

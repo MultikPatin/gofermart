@@ -13,11 +13,6 @@ func main() {
 
 	c := config.Parse(logger)
 
-	logger.Infow(
-		"Parsed config",
-		"config", c,
-	)
-
 	shorterApp, err := app.NewApp(c)
 	if err != nil {
 		logger.Fatalw(
