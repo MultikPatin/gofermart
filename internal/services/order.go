@@ -77,6 +77,10 @@ func (s *OrdersService) GetAll(ctx context.Context) ([]*dtos.Order, error) {
 			if err != nil {
 				errChan <- err
 			} else {
+				s.logger.Infow(
+					"GetByOrderID",
+					"loyalty", loyalty,
+				)
 				resultChan <- &dtos.Order{
 					OrderDB:     *orderDB,
 					OrderStatus: loyalty.OrderStatus,
