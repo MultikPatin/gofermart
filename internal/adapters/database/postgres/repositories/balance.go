@@ -28,8 +28,8 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 
 	query := `
 	SELECT
-		SUM(CASE WHEN action = 'deposit' THEN amount ELSE 0 END) AS current,
-    	ABS(SUM(CASE WHEN action = 'withdrawal' THEN amount ELSE 0 END)) AS withdrawn
+		SUM(CASE WHEN action = 'deposit' THEN amount WHEN action = 'withdrawal' THEN -amount END) AS current,
+    	SUM(CASE WHEN action = 'withdrawal' THEN amount ELSE 0 END) AS withdrawn
 	FROM balances
 	WHERE user_id = $1;`
 
