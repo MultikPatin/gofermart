@@ -33,18 +33,18 @@ func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (
 
 	request, err := http.NewRequest(http.MethodGet, endpoint, strings.NewReader(""))
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when creating accrual system request: %w", err)
 	}
 
 	response, err := l.client.Do(request)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when requesting accrual system: %w", err)
 	}
 	defer response.Body.Close()
 
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error when reading accrual system response body: %w", err)
 	}
 
 	loyalty := &schemas.LoyaltyCalculation{}
