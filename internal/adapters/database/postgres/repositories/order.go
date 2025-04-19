@@ -68,7 +68,7 @@ func (r *OrdersRepository) Add(ctx context.Context, OrderNumber string) (int64, 
 	return orderID, err
 }
 
-func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderBD, error) {
+func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderDB, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
 
 	query := `
@@ -82,10 +82,10 @@ func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderBD, error) 
 	}
 
 	var uploadedAt time.Time
-	var orders []*dtos.OrderBD
+	var orders []*dtos.OrderDB
 
 	for rows.Next() {
-		w := new(dtos.OrderBD)
+		w := new(dtos.OrderDB)
 		err := rows.Scan(&w.ID, &w.Number, &uploadedAt)
 		if err != nil {
 			return nil, err

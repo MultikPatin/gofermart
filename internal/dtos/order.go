@@ -8,7 +8,7 @@ type OrderStatus struct {
 	Accrual float32
 }
 
-type OrderBD struct {
+type OrderDB struct {
 	ID int64
 	OrderBase
 	Uploaded string
@@ -20,6 +20,6 @@ type LoyaltyCalculation struct {
 }
 
 type Order struct {
-	OrderBD
+	OrderDB
 	OrderStatus
 }

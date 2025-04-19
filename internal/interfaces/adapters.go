@@ -1,6 +1,9 @@
 package interfaces
 
-import "main/internal/dtos"
+import (
+	"context"
+	"main/internal/dtos"
+)
 
 type Database interface {
 	Close() error
@@ -8,5 +11,5 @@ type Database interface {
 }
 
 type LoyaltyCalculation interface {
-	GetByOrderID(orderID string) (*dtos.LoyaltyCalculation, error)
+	GetByOrderID(ctx context.Context, orderID string) (*dtos.LoyaltyCalculation, error)
 }

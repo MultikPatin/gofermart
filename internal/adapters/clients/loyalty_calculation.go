@@ -1,6 +1,9 @@
 package clients
 
-import "main/internal/dtos"
+import (
+	"context"
+	"main/internal/dtos"
+)
 
 type LoyaltyCalculation struct {
 	accrualSystemAddr string
@@ -12,6 +15,6 @@ func NewLoyaltyCalculation(Addr string) *LoyaltyCalculation {
 	}
 }
 
-func (l *LoyaltyCalculation) GetByOrderID(orderID string) (*dtos.LoyaltyCalculation, error) {
+func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (*dtos.LoyaltyCalculation, error) {
 	return nil, nil
 }
