@@ -52,14 +52,15 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.With
 
 func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
+	action := enums.BalanceWithdrawal.String()
 
 	query := `
     SELECT order_id, amount, processed_at
     FROM balances
-    WHERE action = 'withdrawal' and user_id = $1
+    WHERE action = $1 and user_id = $2
     ORDER BY processed_at DESC;`
 
-	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
+	rows, err := r.db.Connection.QueryContext(ctx, query, action, userID)
 	if err != nil {
 		return nil, err
 	}

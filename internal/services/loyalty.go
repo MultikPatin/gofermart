@@ -29,11 +29,6 @@ type LoyaltyService struct {
 }
 
 func (s *LoyaltyService) AddBalances(ctx context.Context, balances [][]*dtos.Deposit) error {
-	s.logger.Infow(
-		"AddBalances",
-		"orderUpdate", balances,
-	)
-
 	inputChan := depositGenerator(ctx, balances)
 	errChan := make(chan error, len(balances))
 
