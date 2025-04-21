@@ -143,7 +143,7 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	query := `
 	UPDATE orders
 	SET accrual = $1
-	WHERE id = $3;`
+	WHERE id = $2;`
 
 	for _, order := range orders {
 		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
