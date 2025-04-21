@@ -148,6 +148,13 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	for _, order := range orders {
 		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
 		if err == nil {
+			r.logger.Infow(
+				"BatchUpdate",
+				"order.Accrual", order.Accrual,
+				"status", status,
+				"status", status,
+				"order.I", order.ID,
+			)
 			_, err := r.db.Connection.ExecContext(ctx, query, order.Accrual, status, order.ID)
 			if err != nil {
 				tx.Rollback()
