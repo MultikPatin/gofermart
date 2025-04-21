@@ -78,11 +78,6 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//200 — пользователь успешно зарегистрирован и аутентифицирован;
-	//400 — неверный формат запроса;
-	//409 — логин уже занят;
-	//500 — внутренняя ошибка сервера.
-
 	http.SetCookie(w, cookie)
 	w.WriteHeader(http.StatusOK)
 }
@@ -135,11 +130,6 @@ func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	//200 — пользователь успешно аутентифицирован;
-	//400 — неверный формат запроса;
-	//401 — неверная пара логин/пароль;
-	//500 — внутренняя ошибка сервера.
 
 	http.SetCookie(w, cookie)
 	w.WriteHeader(http.StatusOK)

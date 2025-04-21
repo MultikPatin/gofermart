@@ -29,6 +29,7 @@ type OrdersRepository struct {
 
 func (r *OrdersRepository) Add(ctx context.Context, orderCreate *dtos.OrderCreate) (int64, error) {
 	userIDContext := ctx.Value(constants.UserIDKey).(int64)
+	accrual := 0
 	orderExist := true
 
 	query := `
@@ -58,24 +59,38 @@ func (r *OrdersRepository) Add(ctx context.Context, orderCreate *dtos.OrderCreat
 	}
 
 	query = `
-	INSERT INTO orders (user_id, order_id, status) 
-	VALUES ($1, $2, $3) 
+	INSERT INTO orders (user_id, order_id, accrual, status) 
+	VALUES ($1, $2, $3, $4) 
 	RETURNING id;`
 
-	err = r.db.Connection.QueryRowContext(ctx, query, userIDContext, orderCreate.Number, orderCreate.Status.String()).Scan(&orderID)
+	err = r.db.Connection.QueryRowContext(ctx, query, userIDContext, orderCreate.Number, accrual, orderCreate.Status.String()).Scan(&orderID)
 	if err != nil {
 		return -1, err
 	}
 	return orderID, err
 }
 
-func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderDB, error) {
+func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderStatusEnum) ([]*dtos.OrderDB, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
 
 	query := `
 	SELECT id, order_id, status, uploaded_at 
 	FROM orders 
-	WHERE user_id = $1;`
+	WHERE user_id = $1`
+
+	if len(statuses) > 0 {
+		statusList := `status IN (`
+		for i := 0; i < len(statuses); i++ {
+			if i == len(statuses)-1 {
+				statusList += " " + statuses[i].String()
+			} else {
+				statusList += " " + statuses[i].String() + `,`
+			}
+		}
+		statusList += `)`
+		query += ` AND ` + statusList
+	}
+	query += `;`
 
 	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -96,7 +111,7 @@ func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderDB, error) 
 
 		var ok bool
 
-		w.Status, ok = enums.OrdesStatusFromString(status)
+		w.Status, ok = enums.OrdersStatusFromString(status)
 		if !ok {
 			r.logger.Infow(
 				"Get order with unknown status",
@@ -112,4 +127,27 @@ func (r *OrdersRepository) GetAll(ctx context.Context) ([]*dtos.OrderDB, error) 
 	}
 
 	return orders, nil
+}
+
+func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.UpdateOrderStatus) error {
+	tx, err := r.db.Connection.Begin()
+	if err != nil {
+		return err
+	}
+
+	query := `
+	UPDATE orders
+	SET accrual = $1, status = $2
+	WHERE id = $3`
+
+	for _, order := range orders {
+		_, err := r.db.Connection.ExecContext(ctx, query, order.Accrual, order.Status, order.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	tx.Commit()
+	return nil
 }

@@ -14,21 +14,28 @@ var (
 	ErrPaymentRequired = errors.New("no more balance to withdraw")
 )
 
-func NewBalancesService(r interfaces.BalancesRepository) *BalancesService {
+func NewBalancesService(r interfaces.BalancesRepository, loyaltyService interfaces.LoyaltyService) *BalancesService {
 	return &BalancesService{
 		repo:   r,
 		logger: adapters.GetLogger(),
+		ls:     loyaltyService,
 	}
 }
 
 type BalancesService struct {
 	repo   interfaces.BalancesRepository
 	logger *zap.SugaredLogger
+	ls     interfaces.LoyaltyService
 }
 
 func (s *BalancesService) Get(ctx context.Context) (*dtos.Balance, error) {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
+
+	err := s.ls.Update(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	balance, err := s.repo.Get(ctx)
 	if err != nil {
@@ -39,10 +46,10 @@ func (s *BalancesService) Get(ctx context.Context) (*dtos.Balance, error) {
 }
 
 func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error {
-	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
-	balance, err := s.repo.Get(ctx)
+	balance, err := s.Get(ctx)
 	if err != nil {
 		return err
 	}

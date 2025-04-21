@@ -60,10 +60,6 @@ func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//200 — успешная обработка запроса.
-	//401 — пользователь не авторизован.
-	//500 — внутренняя ошибка сервера.
-
 	w.Header().Set("content-type", constants.JSONContentType)
 	w.WriteHeader(http.StatusOK)
 	w.Write(resp)
@@ -117,12 +113,6 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//200 — успешная обработка запроса;
-	//401 — пользователь не авторизован;
-	//402 — на счету недостаточно средств;
-	//422 — неверный номер заказа;
-	//500 — внутренняя ошибка сервера.
-
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -170,11 +160,6 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
-	//200 — успешная обработка запроса.
-	//204 — нет ни одного списания.
-	//401 — пользователь не авторизован.
-	//500 — внутренняя ошибка сервера.
 
 	w.Header().Set("content-type", constants.JSONContentType)
 	w.WriteHeader(http.StatusOK)

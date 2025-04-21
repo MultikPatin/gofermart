@@ -25,7 +25,7 @@ func (o OrderStatusEnum) String() string {
 	return ""
 }
 
-func OrdesStatusFromString(s string) (OrderStatusEnum, bool) {
+func OrdersStatusFromString(s string) (OrderStatusEnum, bool) {
 	status, ok := orderStatuses[s]
 	return status, ok
 }

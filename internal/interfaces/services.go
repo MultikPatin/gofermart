@@ -13,10 +13,14 @@ type BalancesService interface {
 
 type OrdersService interface {
 	Add(ctx context.Context, OrderID string) error
-	GetAll(ctx context.Context) ([]*dtos.Order, error)
+	GetAll(ctx context.Context) ([]*dtos.OrderDB, error)
 }
 
 type UsersService interface {
 	Register(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error)
 	Login(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error)
+}
+
+type LoyaltyService interface {
+	Update(ctx context.Context) error
 }

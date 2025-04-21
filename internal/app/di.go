@@ -92,9 +92,12 @@ func NewServices(c *config.Config) (*Services, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	ls := services.NewLoyaltyService(r.orders, r.balances, cl.loyalty)
+
 	return &Services{
-		orders:     services.NewOrdersService(r.orders, cl.loyalty),
-		balances:   services.NewBalancesService(r.balances),
+		orders:     services.NewOrdersService(r.orders, ls),
+		balances:   services.NewBalancesService(r.balances, ls),
 		users:      services.NewUsersService(r.users),
 		Repository: r,
 	}, nil

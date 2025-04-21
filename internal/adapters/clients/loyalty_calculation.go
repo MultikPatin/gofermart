@@ -30,8 +30,8 @@ func NewLoyaltyCalculation(Addr string) *LoyaltyCalculation {
 	}
 }
 
-func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (*dtos.LoyaltyCalculation, error) {
-	endpoint := fmt.Sprintf("%s/api/orders/%s", l.accrualSystemAddr, orderID)
+func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderNumber string) (*dtos.LoyaltyCalculation, error) {
+	endpoint := fmt.Sprintf("%s/api/orders/%s", l.accrualSystemAddr, orderNumber)
 
 	request, err := http.NewRequest(http.MethodGet, endpoint, strings.NewReader(""))
 	if err != nil {
@@ -64,20 +64,15 @@ func (l *LoyaltyCalculation) GetByOrderID(ctx context.Context, orderID string) (
 		return nil, fmt.Errorf("error when parsing accrual system response: %w", err)
 	}
 
-	status, ok := enums.OrdesStatusFromString(loyalty.Status)
+	status, ok := enums.LoyaltyStatusFromString(loyalty.Status)
 
 	if !ok {
 		return nil, services.ErrUnknownStatus
 	}
 
 	result := dtos.LoyaltyCalculation{
-		OrderBase: dtos.OrderBase{
-			Number: loyalty.Number,
-		},
-		OrderStatus: dtos.OrderStatus{
-			Status:  status,
-			Accrual: loyalty.Accrual,
-		},
+		Status:  status,
+		Accrual: loyalty.Accrual,
 	}
 
 	return &result, nil

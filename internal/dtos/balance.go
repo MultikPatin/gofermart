@@ -6,12 +6,12 @@ type Balance struct {
 }
 
 type Withdraw struct {
-	Order int
+	Order string
 	Sum   float32
 }
 
 type Withdrawal struct {
-	Order     int
+	Order     string
 	Sum       float32
 	Processed string
 }

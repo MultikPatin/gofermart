@@ -8,6 +8,7 @@ import (
 	"main/internal/adapters/database/postgres"
 	"main/internal/constants"
 	"main/internal/dtos"
+	"main/internal/enums"
 	"time"
 )
 
@@ -28,13 +29,13 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 
 	query := `
 	SELECT
-		SUM(CASE WHEN action = 'deposit' THEN amount WHEN action = 'withdrawal' THEN -amount END) AS current,
-    	ABS(SUM(CASE WHEN action = 'withdrawal' THEN amount ELSE 0 END)) AS withdrawn
+		SUM(CASE WHEN action = $1 THEN amount WHEN action = $2 THEN -amount END) AS current,
+    	ABS(SUM(CASE WHEN action = $2 THEN amount ELSE 0 END)) AS withdrawn
 	FROM balances
-	WHERE user_id = $1;`
+	WHERE user_id = $3;`
 
 	result := new(dtos.Balance)
-	row := r.db.Connection.QueryRowContext(ctx, query, userID)
+	row := r.db.Connection.QueryRowContext(ctx, query, userID, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String())
 	err := row.Scan(&result.Current, &result.Withdraw)
 	if err == nil {
 		return nil, err
@@ -80,4 +81,33 @@ func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawa
 	}
 
 	return withdrawals, nil
+}
+
+func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit) ([]int64, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	action := enums.BalanceDeposit.String()
+
+	tx, err := r.db.Connection.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	query := `
+	INSERT INTO balances (user_id, order_id, action, amount)
+	VALUES ($1, $2, $3, $4) RETURNING id;`
+
+	results := make([]int64, len(items))
+
+	for _, item := range items {
+		var ID int64
+		err := r.db.Connection.QueryRowContext(ctx, query, userID, item.OrderNumber, action, item.Amount).Scan(&ID)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		results = append(results, ID)
+	}
+
+	tx.Commit()
+	return results, nil
 }

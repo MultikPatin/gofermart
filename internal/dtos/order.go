@@ -10,6 +10,7 @@ type OrderCreate struct {
 	Status enums.OrderStatusEnum
 	Number string
 }
+
 type OrderStatus struct {
 	Status  enums.OrderStatusEnum
 	Accrual float32
@@ -20,14 +21,5 @@ type OrderDB struct {
 	OrderBase
 	Status   enums.OrderStatusEnum
 	Uploaded string
-}
-
-type LoyaltyCalculation struct {
-	OrderBase
-	OrderStatus
-}
-
-type Order struct {
-	OrderDB
-	Accrual float32
+	Accrual  float32
 }

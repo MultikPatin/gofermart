@@ -11,22 +11,24 @@ const (
 		    id SERIAL PRIMARY KEY,
 		    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
 		    order_id VARCHAR(255) UNIQUE NOT NULL,
+		    accrual INTEGER NOT NULL,
 			status VARCHAR(255) NOT NULL,
 		    uploaded_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		);
 		CREATE TABLE IF NOT EXISTS balances (
 		    id SERIAL PRIMARY KEY,
 		    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+		    order_id VARCHAR(255) UNIQUE NOT NULL,
 		    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-		    order_id VARCHAR(255) NOT NULL,
 		    action VARCHAR(32) NOT NULL,
 		    amount INTEGER NOT NULL
 		);
+		CREATE INDEX IF NOT EXISTS order_id_index ON balances(order_id);
 		DO
 		
 		$$
 		BEGIN
-			CREATE TYPE balance_actions_enum AS ENUM ('deposit', 'withdrawal');
+			CREATE TYPE balance_actions_enum AS ENUM ('DEPOSIT', 'WITHDRAWAL');
 		EXCEPTION WHEN duplicate_object THEN
 			RAISE NOTICE 'Тип данных balance_actions_enum уже существует.';
 		END

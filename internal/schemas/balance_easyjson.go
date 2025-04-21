@@ -37,7 +37,7 @@ func easyjsonBed2650eDecodeMainInternalSchemas(in *jlexer.Lexer, out *Withdrawal
 		}
 		switch key {
 		case "order":
-			out.Order = int(in.Int())
+			out.Order = string(in.String())
 		case "sum":
 			out.Sum = float32(in.Float32())
 		case "processed_at":
@@ -59,7 +59,7 @@ func easyjsonBed2650eEncodeMainInternalSchemas(out *jwriter.Writer, in Withdrawa
 	{
 		const prefix string = ",\"order\":"
 		out.RawString(prefix[1:])
-		out.Int(int(in.Order))
+		out.String(string(in.Order))
 	}
 	{
 		const prefix string = ",\"sum\":"
@@ -117,7 +117,7 @@ func easyjsonBed2650eDecodeMainInternalSchemas1(in *jlexer.Lexer, out *Withdraw)
 		}
 		switch key {
 		case "order":
-			out.Order = int(in.Int())
+			out.Order = string(in.String())
 		case "sum":
 			out.Sum = float32(in.Float32())
 		default:
@@ -137,7 +137,7 @@ func easyjsonBed2650eEncodeMainInternalSchemas1(out *jwriter.Writer, in Withdraw
 	{
 		const prefix string = ",\"order\":"
 		out.RawString(prefix[1:])
-		out.Int(int(in.Order))
+		out.String(string(in.Order))
 	}
 	{
 		const prefix string = ",\"sum\":"
