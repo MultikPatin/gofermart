@@ -147,7 +147,7 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 
 	items := make([]schemas.Withdrawal, 0, len(results))
 	for i := 0; i < len(results); i++ {
-		items = append(items, schemas.Withdrawal(*results[i]))
+		items[i] = schemas.Withdrawal(*results[i])
 	}
 
 	var writer jwriter.Writer

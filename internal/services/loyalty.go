@@ -153,7 +153,7 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 		return err
 	}
 
-	results := make([]*dtos.UpdateOrderStatus, len(orders))
+	var results []*dtos.UpdateOrderStatus
 
 	inputChan := ordersGenerator(ctx, orders)
 	errChan := make(chan error, len(orders))
@@ -194,10 +194,6 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 	}
 
 	for item := range resultChan {
-		s.logger.Infow(
-			"Update loyalty",
-			"item", item,
-		)
 		results = append(results, item)
 	}
 

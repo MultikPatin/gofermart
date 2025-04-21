@@ -101,7 +101,7 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items := make([]schemas.Order, 0, len(results))
+	items := make([]schemas.Order, len(results))
 	for i := 0; i < len(results); i++ {
 		item := schemas.Order{
 			Number:   results[i].Number,
@@ -109,7 +109,7 @@ func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 			Accrual:  results[i].Accrual,
 			Uploaded: results[i].Uploaded,
 		}
-		items = append(items, item)
+		items[i] = item
 	}
 
 	var writer jwriter.Writer
