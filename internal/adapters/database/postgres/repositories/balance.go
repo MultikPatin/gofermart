@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
@@ -9,6 +11,7 @@ import (
 	"main/internal/constants"
 	"main/internal/dtos"
 	"main/internal/enums"
+	"main/internal/services"
 	"time"
 )
 
@@ -49,37 +52,37 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.With
 	action := enums.BalanceWithdrawal.String()
 	var ID int64
 
-	//orderExist := true
-	//
-	//query := `
-	//SELECT user_id
-	//FROM orders
-	//WHERE order_id = $1;`
-	//
-	//row := r.db.Connection.QueryRowContext(ctx, query, withdrawal.Order)
-	//err := row.Scan(&ID)
-	//if err != nil {
-	//	switch {
-	//	case errors.Is(err, sql.ErrNoRows):
-	//		orderExist = false
-	//	default:
-	//		return -1, err
-	//	}
-	//}
-	//
-	//if !orderExist {
-	//	return -1, services.ErrOrderIDNotValid
-	//}
-	//
-	//if ID != userID {
-	//	return -1, services.ErrOrderAlreadyLoadedByAnotherUser
-	//}
+	orderExist := true
 
 	query := `
+	SELECT user_id
+	FROM orders
+	WHERE order_id = $1;`
+
+	row := r.db.Connection.QueryRowContext(ctx, query, withdrawal.Order)
+	err := row.Scan(&ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			orderExist = false
+		default:
+			return -1, err
+		}
+	}
+
+	if !orderExist {
+		return -1, services.ErrOrderIDNotValid
+	}
+
+	if ID != userID {
+		return -1, services.ErrOrderAlreadyLoadedByAnotherUser
+	}
+
+	query = `
 	INSERT INTO balances (user_id, order_id, action, amount)
 	VALUES ($1, $2, $3, $4) RETURNING id;`
 
-	err := r.db.Connection.QueryRowContext(ctx, query, userID, withdrawal.Order, action, withdrawal.Sum).Scan(&ID)
+	err = r.db.Connection.QueryRowContext(ctx, query, userID, withdrawal.Order, action, withdrawal.Sum).Scan(&ID)
 	if err != nil {
 		return -1, err
 	}
