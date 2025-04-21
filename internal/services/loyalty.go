@@ -150,6 +150,7 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 	inputChan := ordersGenerator(ctx, orders)
 	errChan := make(chan error, len(orders))
 	resultChan := make(chan *dtos.UpdateOrderStatus, len(orders))
+	defer close(resultChan)
 
 	var wg sync.WaitGroup
 	for item := range inputChan {
@@ -175,7 +176,6 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 	go func() {
 		wg.Wait()
 		close(errChan)
-		close(resultChan)
 	}()
 
 	for err := range errChan {
@@ -186,6 +186,10 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 	}
 
 	for item := range resultChan {
+		s.logger.Infow(
+			"loyalty result",
+			"errors", *item,
+		)
 		results = append(results, item)
 	}
 
