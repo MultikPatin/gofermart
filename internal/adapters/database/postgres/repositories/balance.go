@@ -81,7 +81,7 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.With
 	INSERT INTO balances (user_id, order_id, action, amount)
 	VALUES ($1, $2, $3, $4) RETURNING id;`
 
-	err = r.db.Connection.QueryRowContext(ctx, query, userID, withdrawal.Order, action, withdrawal.Sum).Scan(&ID)
+	err = r.db.Connection.QueryRowContext(ctx, query, userID, withdrawal.Order, action, float32(withdrawal.Sum)).Scan(&ID)
 	if err != nil {
 		return -1, err
 	}

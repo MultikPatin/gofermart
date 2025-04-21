@@ -7,7 +7,7 @@ type Balance struct {
 
 type Withdraw struct {
 	Order string
-	Sum   float32
+	Sum   int
 }
 
 type Withdrawal struct {

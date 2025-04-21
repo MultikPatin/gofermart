@@ -54,7 +54,7 @@ func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdra
 		return err
 	}
 
-	if balance.Current < withdrawal.Sum {
+	if balance.Current < float32(withdrawal.Sum) {
 		return ErrPaymentRequired
 	}
 
