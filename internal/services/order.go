@@ -8,6 +8,7 @@ import (
 	"main/internal/dtos"
 	"main/internal/enums"
 	"main/internal/interfaces"
+	"strconv"
 	"time"
 )
 
@@ -37,7 +38,9 @@ func (s *OrdersService) Add(ctx context.Context, OrderID string) error {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 
-	//TODO Номер заказа может быть проверен на корректность ввода с помощью алгоритма Луна.
+	if !IsValidLuhn(OrderID) {
+		return ErrOrderIDNotValid
+	}
 
 	orderCreate := &dtos.OrderCreate{
 		Number: OrderID,
@@ -68,4 +71,25 @@ func (s *OrdersService) GetAll(ctx context.Context) ([]*dtos.OrderDB, error) {
 		return nil, err
 	}
 	return orders, nil
+}
+
+func IsValidLuhn(number string) bool {
+	sum := 0
+	double := false
+
+	for i := len(number) - 1; i >= 0; i-- {
+		digit, _ := strconv.Atoi(string(number[i]))
+
+		if double {
+			digit *= 2
+			if digit > 9 {
+				digit -= 9
+			}
+		}
+
+		sum += digit
+		double = !double
+	}
+
+	return sum%10 == 0
 }
