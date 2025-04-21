@@ -34,18 +34,14 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	FROM balances
 	WHERE user_id = $3;`
 
-	result := new(dtos.Balance)
+	var result dtos.Balance
 	row := r.db.Connection.QueryRowContext(ctx, query, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
 	err := row.Scan(&result.Current, &result.Withdraw)
 	if err == nil {
 		return nil, err
 	}
-	r.logger.Infow(
-		"Balance get",
-		"result", result,
-	)
 
-	return result, nil
+	return &result, nil
 }
 
 func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error {
@@ -73,13 +69,13 @@ func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawa
 	var withdrawals []*dtos.Withdrawal
 
 	for rows.Next() {
-		w := new(dtos.Withdrawal)
+		var w dtos.Withdrawal
 		err := rows.Scan(&w.Order, &w.Sum, &processedAt)
 		if err != nil {
 			return nil, err
 		}
 		w.Processed = processedAt.Format(time.RFC3339)
-		withdrawals = append(withdrawals, w)
+		withdrawals = append(withdrawals, &w)
 	}
 	if err := rows.Err(); err != nil {
 		return nil, err

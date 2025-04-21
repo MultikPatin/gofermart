@@ -103,7 +103,7 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 	var orders []*dtos.OrderDB
 
 	for rows.Next() {
-		w := new(dtos.OrderDB)
+		var w dtos.OrderDB
 		err := rows.Scan(&w.ID, &w.Number, &status, &uploadedAt)
 		if err != nil {
 			return nil, err
@@ -119,7 +119,7 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 				"status", status,
 			)
 		} else {
-			orders = append(orders, w)
+			orders = append(orders, &w)
 		}
 
 	}
