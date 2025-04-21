@@ -119,7 +119,7 @@ func easyjsonBed2650eDecodeMainInternalSchemas1(in *jlexer.Lexer, out *Withdraw)
 		case "order":
 			out.Order = string(in.String())
 		case "sum":
-			out.Sum = int(in.Int())
+			out.Sum = float32(in.Float32())
 		default:
 			in.SkipRecursive()
 		}
@@ -142,7 +142,7 @@ func easyjsonBed2650eEncodeMainInternalSchemas1(out *jwriter.Writer, in Withdraw
 	{
 		const prefix string = ",\"sum\":"
 		out.RawString(prefix)
-		out.Int(int(in.Sum))
+		out.Float32(float32(in.Sum))
 	}
 	out.RawByte('}')
 }
