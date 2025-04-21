@@ -73,9 +73,9 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.With
 		return -1, services.ErrOrderIDNotValid
 	}
 
-	if ID != userID {
-		return -1, services.ErrOrderAlreadyLoadedByAnotherUser
-	}
+	//if ID != userID {
+	//	return -1, services.ErrOrderAlreadyLoadedByAnotherUser
+	//}
 
 	query = `
 	INSERT INTO balances (user_id, order_id, action, amount)
