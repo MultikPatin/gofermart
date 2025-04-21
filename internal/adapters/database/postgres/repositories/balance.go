@@ -46,7 +46,7 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	}
 
 	for rows.Next() {
-		err := rows.Scan(&id, &userIDs, orderID, &processedAt, &action, &amount)
+		err := rows.Scan(&id, &userIDs, &orderID, &processedAt, &action, &amount)
 		if err != nil {
 			return nil, err
 		}
