@@ -85,6 +85,10 @@ func (s *LoyaltyService) UpdateOrders(ctx context.Context, orders []*dtos.Update
 		data := item
 		go func(orderUpdate []*dtos.UpdateOrderStatus) {
 			defer wg.Done()
+			s.logger.Infow(
+				"BatchUpdate",
+				"orderUpdate", orderUpdate,
+			)
 			err := s.ro.BatchUpdate(ctx, orderUpdate)
 			if err != nil {
 				errChan <- fmt.Errorf("error updating orders: %w", err)
@@ -186,10 +190,6 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 	}
 
 	for item := range resultChan {
-		s.logger.Infow(
-			"loyalty result",
-			"errors", *item,
-		)
 		results = append(results, item)
 	}
 
