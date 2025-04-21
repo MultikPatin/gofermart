@@ -37,7 +37,7 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	var result dtos.Balance
 	row := r.db.Connection.QueryRowContext(ctx, query, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
 	err := row.Scan(&result.Current, &result.Withdraw)
-	if err == nil {
+	if err != nil {
 		return nil, err
 	}
 
