@@ -93,11 +93,6 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 	}
 	query += `;`
 
-	r.logger.Infow(
-		"GetAll",
-		"query", query,
-	)
-
 	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err
@@ -124,6 +119,10 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 				"status", status,
 			)
 		} else {
+			r.logger.Infow(
+				"GetAll",
+				"OrderDB", w,
+			)
 			orders = append(orders, &w)
 		}
 
