@@ -146,7 +146,7 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 		if err != nil {
 			return err
 		}
-		_, err = tx.ExecContext(ctx, query, order.Accrual, status, order.ID)
+		_, err = tx.ExecContext(ctx, query, order.Accrual, status.String(), order.ID)
 		if err != nil {
 			tx.Rollback()
 			return err

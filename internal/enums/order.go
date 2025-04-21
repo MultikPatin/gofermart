@@ -37,7 +37,7 @@ func MutateLoyaltyToOrderStatus(status LoyaltyStatusEnum) (OrderStatusEnum, erro
 	case LoyaltyRegistered:
 		return OrderCreated, nil
 	case LoyaltyProcessing:
-		return OrderProcessed, nil
+		return OrderProcessing, nil
 	case LoyaltyInvalid:
 		return OrderInvalid, nil
 	case LoyaltyProcessed:
