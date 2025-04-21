@@ -135,14 +135,14 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 }
 
 func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.UpdateOrderStatus) error {
-	tx, err := r.db.Connection.Begin()
+	tx, err := r.db.Connection.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
 	query := `
 	UPDATE orders
-	SET accrual = $1, status = $2
+	SET accrual = $1
 	WHERE id = $3;`
 
 	for _, order := range orders {
@@ -154,11 +154,11 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 				"status", status.String(),
 				"order.I", order.ID,
 			)
-			status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
-			if err != nil {
-				return err
-			}
-			_, err = tx.ExecContext(ctx, query, order.Accrual, status.String(), order.ID)
+			//status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
+			//if err != nil {
+			//	return err
+			//}
+			_, err = tx.ExecContext(ctx, query, order.Accrual, order.ID)
 			if err != nil {
 				tx.Rollback()
 				return err

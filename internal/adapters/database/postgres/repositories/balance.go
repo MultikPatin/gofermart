@@ -128,7 +128,7 @@ func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit
 	userID := ctx.Value(constants.UserIDKey).(int64)
 	action := enums.BalanceDeposit.String()
 
-	tx, err := r.db.Connection.Begin()
+	tx, err := r.db.Connection.BeginTx(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
