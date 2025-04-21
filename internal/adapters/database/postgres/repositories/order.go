@@ -142,6 +142,10 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	WHERE id = $3`
 
 	for _, order := range orders {
+		r.logger.Infow(
+			"BatchUpdate",
+			"order", order,
+		)
 		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
 		if err == nil {
 			_, err := r.db.Connection.ExecContext(ctx, query, order.Accrual, status, order.ID)
