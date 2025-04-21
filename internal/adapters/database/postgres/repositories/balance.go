@@ -30,7 +30,7 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	TestQuery := `
     SELECT id, user_id, order_id, processed_at, action, amount
     FROM balances
-    WHERE user_id = $3
+    WHERE user_id = $1
     ORDER BY processed_at DESC;`
 
 	var id int64
