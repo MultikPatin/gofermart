@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
@@ -9,6 +11,7 @@ import (
 	"main/internal/constants"
 	"main/internal/dtos"
 	"main/internal/enums"
+	"main/internal/services"
 	"time"
 )
 
@@ -44,10 +47,46 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	return &result, nil
 }
 
-func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error {
-	// если заказ не найден в таблице orders
-	//err := services.ErrOrderIDNotValid
-	return nil
+func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) (int64, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	action := enums.BalanceWithdrawal.String()
+	orderExist := true
+
+	query := `
+	SELECT user_id 
+	FROM orders 
+	WHERE order_id = $1;`
+
+	var ID int64
+	row := r.db.Connection.QueryRowContext(ctx, query, withdrawal.Order)
+	err := row.Scan(&ID)
+	if err != nil {
+		switch {
+		case errors.Is(err, sql.ErrNoRows):
+			orderExist = false
+		default:
+			return -1, err
+		}
+	}
+
+	if !orderExist {
+		return -1, services.ErrOrderIDNotValid
+	}
+
+	if ID != userID {
+		return -1, services.ErrOrderAlreadyLoadedByAnotherUser
+	}
+
+	query = `
+	INSERT INTO balances (user_id, order_id, action, amount)
+	VALUES ($1, $2, $3, $4) RETURNING id;`
+
+	err = r.db.Connection.QueryRowContext(ctx, query, userID, withdrawal.Order, action, withdrawal.Sum).Scan(&ID)
+	if err != nil {
+		return -1, err
+	}
+
+	return ID, nil
 }
 
 func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
@@ -97,7 +136,7 @@ func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit
 	INSERT INTO balances (user_id, order_id, action, amount)
 	VALUES ($1, $2, $3, $4) RETURNING id;`
 
-	results := make([]int64, len(items))
+	var results []int64
 
 	for _, item := range items {
 		var ID int64

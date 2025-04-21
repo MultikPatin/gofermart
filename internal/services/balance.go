@@ -58,7 +58,7 @@ func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdra
 		return ErrPaymentRequired
 	}
 
-	err = s.repo.Withdraw(ctx, withdrawal)
+	_, err = s.repo.Withdraw(ctx, withdrawal)
 	if err != nil {
 		return err
 	}

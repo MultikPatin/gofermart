@@ -8,7 +8,7 @@ import (
 
 type BalancesRepository interface {
 	Get(ctx context.Context) (*dtos.Balance, error)
-	Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) error
+	Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) (int64, error)
 	Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error)
 	BatchAdd(ctx context.Context, orders []*dtos.Deposit) ([]int64, error)
 }
