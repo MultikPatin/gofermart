@@ -27,50 +27,16 @@ type BalancesRepository struct {
 func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
 
-	TestQuery := `
-    SELECT id, user_id, order_id, processed_at, action, amount
-    FROM balances
-    WHERE user_id = $1
-    ORDER BY processed_at DESC;`
-
-	var id int64
-	var userIDs int64
-	var orderID string
-	var processedAt string
-	var action string
-	var amount int64
-
-	rows, err := r.db.Connection.QueryContext(ctx, TestQuery, userID)
-	if err != nil {
-		return nil, err
-	}
-
-	for rows.Next() {
-		err := rows.Scan(&id, &userIDs, &orderID, &processedAt, &action, &amount)
-		if err != nil {
-			return nil, err
-		}
-		r.logger.Infow(
-			"Balance DB",
-			"id", id,
-			"userID", userIDs,
-			"orderID", orderID,
-			"processedAt", processedAt,
-			"action", action,
-			"amount", amount,
-		)
-	}
-
 	query := `
 	SELECT
 		SUM(CASE WHEN action = $1 THEN amount WHEN action = $2 THEN -amount END) AS current,
-    	ABS(SUM(CASE WHEN action = $2 THEN amount ELSE 0 END)) AS withdrawn
+    	SUM(CASE WHEN action = $2 THEN amount ELSE 0 END) AS withdrawn
 	FROM balances
 	WHERE user_id = $3;`
 
 	result := new(dtos.Balance)
-	row := r.db.Connection.QueryRowContext(ctx, query, userID, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String())
-	err = row.Scan(&result.Current, &result.Withdraw)
+	row := r.db.Connection.QueryRowContext(ctx, query, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
+	err := row.Scan(&result.Current, &result.Withdraw)
 	if err == nil {
 		return nil, err
 	}

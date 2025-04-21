@@ -21,7 +21,7 @@ const (
 		    order_id VARCHAR(255),
 		    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		    action VARCHAR(32) NOT NULL,
-		    amount INTEGER NOT NULL
+		    amount INTEGER NOT NULL CHECK (amount >= 0)
 		);
 		CREATE INDEX IF NOT EXISTS order_id_index ON balances(order_id);
 		DO
