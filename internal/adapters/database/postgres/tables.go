@@ -18,7 +18,7 @@ const (
 		CREATE TABLE IF NOT EXISTS balances (
 		    id SERIAL PRIMARY KEY,
 		    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-		    order_id VARCHAR(255) UNIQUE NOT NULL,
+		    order_id VARCHAR(255),
 		    processed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 		    action VARCHAR(32) NOT NULL,
 		    amount INTEGER NOT NULL
