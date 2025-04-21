@@ -75,7 +75,7 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 	userID := ctx.Value(constants.UserIDKey).(int64)
 
 	query := `
-	SELECT id, order_id, status, uploaded_at 
+	SELECT id, order_id, status, uploaded_at, accrual
 	FROM orders 
 	WHERE user_id = $1`
 
@@ -104,7 +104,7 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 
 	for rows.Next() {
 		var w dtos.OrderDB
-		err := rows.Scan(&w.ID, &w.Number, &status, &uploadedAt)
+		err := rows.Scan(&w.ID, &w.Number, &status, &uploadedAt, &w.Accrual)
 		if err != nil {
 			return nil, err
 		}
@@ -147,22 +147,14 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 
 	for _, order := range orders {
 		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
-		if err == nil {
-			r.logger.Infow(
-				"BatchUpdate",
-				"order.Accrual", order.Accrual,
-				"status", status.String(),
-				"order.I", order.ID,
-			)
-			status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
-			if err != nil {
-				return err
-			}
-			_, err = tx.ExecContext(ctx, query, float64(order.Accrual), status.String(), order.ID)
-			if err != nil {
-				tx.Rollback()
-				return err
-			}
+		if err != nil {
+			return err
+		}
+		_, err = tx.ExecContext(ctx, query, float64(order.Accrual), status.String(), order.ID)
+		if err != nil {
+			tx.Rollback()
+			return err
+
 		}
 	}
 
