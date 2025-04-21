@@ -119,6 +119,10 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 				"status", status,
 			)
 		} else {
+			r.logger.Infow(
+				"GetAll",
+				"OrderDB", w,
+			)
 			orders = append(orders, &w)
 		}
 
@@ -143,13 +147,22 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 
 	for _, order := range orders {
 		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
-		if err != nil {
-			return err
-		}
-		_, err = tx.ExecContext(ctx, query, order.Accrual, status.String(), order.ID)
-		if err != nil {
-			tx.Rollback()
-			return err
+		if err == nil {
+			r.logger.Infow(
+				"BatchUpdate",
+				"order.Accrual", order.Accrual,
+				"status", status.String(),
+				"order.I", order.ID,
+			)
+			status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
+			if err != nil {
+				return err
+			}
+			_, err = tx.ExecContext(ctx, query, order.Accrual, status.String(), order.ID)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
 		}
 	}
 
