@@ -142,8 +142,8 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 
 	query := `
 	UPDATE orders
-	SET accrual = $1
-	WHERE id = $2;`
+	SET accrual = $1, status = $2
+	WHERE id = $3;`
 
 	for _, order := range orders {
 		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
@@ -154,11 +154,11 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 				"status", status.String(),
 				"order.I", order.ID,
 			)
-			//status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
-			//if err != nil {
-			//	return err
-			//}
-			_, err = tx.ExecContext(ctx, query, order.Accrual, order.ID)
+			status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
+			if err != nil {
+				return err
+			}
+			_, err = tx.ExecContext(ctx, query, float64(order.Accrual), status.String(), order.ID)
 			if err != nil {
 				tx.Rollback()
 				return err
