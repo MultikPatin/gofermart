@@ -61,6 +61,10 @@ func (s *LoyaltyService) AddBalances(ctx context.Context, balances [][]*dtos.Dep
 }
 
 func (s *LoyaltyService) UpdateOrders(ctx context.Context, orders []*dtos.UpdateOrderStatus) error {
+	s.logger.Infow(
+		"BatchUpdate",
+		"orderUpdate", orders,
+	)
 
 	var batches [][]*dtos.UpdateOrderStatus
 
