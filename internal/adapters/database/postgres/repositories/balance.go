@@ -40,6 +40,10 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	if err == nil {
 		return nil, err
 	}
+	r.logger.Infow(
+		"Balance get",
+		"result", result,
+	)
 
 	return result, nil
 }
@@ -100,10 +104,6 @@ func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit
 	results := make([]int64, len(items))
 
 	for _, item := range items {
-		r.logger.Infow(
-			"BatchAdd",
-			"item", item,
-		)
 		var ID int64
 		err := r.db.Connection.QueryRowContext(ctx, query, userID, item.OrderNumber, action, item.Amount).Scan(&ID)
 		if err != nil {
