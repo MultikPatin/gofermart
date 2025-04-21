@@ -93,7 +93,7 @@ func (s *LoyaltyService) UpdateOrders(ctx context.Context, orders []*dtos.Update
 			if err != nil {
 				errChan <- fmt.Errorf("error updating orders: %w", err)
 			} else {
-				results := make([]*dtos.Deposit, len(orderUpdate))
+				var results []*dtos.Deposit
 				for _, order := range orderUpdate {
 					if order.Status == enums.LoyaltyProcessed {
 						result := &dtos.Deposit{
