@@ -29,6 +29,11 @@ type LoyaltyService struct {
 }
 
 func (s *LoyaltyService) AddBalances(ctx context.Context, balances [][]*dtos.Deposit) error {
+	s.logger.Infow(
+		"AddBalances",
+		"orderUpdate", balances,
+	)
+
 	inputChan := depositGenerator(ctx, balances)
 	errChan := make(chan error, len(balances))
 
@@ -61,11 +66,6 @@ func (s *LoyaltyService) AddBalances(ctx context.Context, balances [][]*dtos.Dep
 }
 
 func (s *LoyaltyService) UpdateOrders(ctx context.Context, orders []*dtos.UpdateOrderStatus) error {
-	s.logger.Infow(
-		"BatchUpdate",
-		"orderUpdate", orders,
-	)
-
 	var batches [][]*dtos.UpdateOrderStatus
 
 	for i := 0; i < len(orders); i += constants.LoyaltyBatchSize {
@@ -89,10 +89,6 @@ func (s *LoyaltyService) UpdateOrders(ctx context.Context, orders []*dtos.Update
 		data := item
 		go func(orderUpdate []*dtos.UpdateOrderStatus) {
 			defer wg.Done()
-			s.logger.Infow(
-				"BatchUpdate",
-				"orderUpdate", orderUpdate,
-			)
 			err := s.ro.BatchUpdate(ctx, orderUpdate)
 			if err != nil {
 				errChan <- fmt.Errorf("error updating orders: %w", err)
