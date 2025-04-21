@@ -140,6 +140,13 @@ func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit
 	var results []int64
 
 	for _, item := range items {
+		r.logger.Infow(
+			"BatchAdd",
+			"userID", userID,
+			"item.OrderNumber", item.OrderNumber,
+			"action", action,
+			"item.Amount", item.Amount,
+		)
 		var ID int64
 		err := r.db.Connection.QueryRowContext(ctx, query, userID, item.OrderNumber, action, item.Amount).Scan(&ID)
 		if err != nil {
