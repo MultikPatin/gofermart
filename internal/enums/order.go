@@ -1,5 +1,7 @@
 package enums
 
+import "fmt"
+
 type OrderStatusEnum uint8
 
 const (
@@ -28,4 +30,19 @@ func (o OrderStatusEnum) String() string {
 func OrdersStatusFromString(s string) (OrderStatusEnum, bool) {
 	status, ok := orderStatuses[s]
 	return status, ok
+}
+
+func MutateLoyaltyToOrderStatus(status LoyaltyStatusEnum) (OrderStatusEnum, error) {
+	switch status {
+	case LoyaltyRegistered:
+		return OrderCreated, nil
+	case LoyaltyProcessing:
+		return OrderProcessed, nil
+	case LoyaltyInvalid:
+		return OrderInvalid, nil
+	case LoyaltyProcessed:
+		return OrderProcessed, nil
+	default:
+		return 0, fmt.Errorf("invalid loyalty status")
+	}
 }

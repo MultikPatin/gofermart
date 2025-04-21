@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"errors"
+	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
 	"main/internal/adapters"
@@ -80,15 +81,15 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 
 	if len(statuses) > 0 {
 		statusList := `status IN (`
+
 		for i := 0; i < len(statuses); i++ {
 			if i == len(statuses)-1 {
-				statusList += " " + statuses[i].String()
+				statusList += fmt.Sprintf("'%s'", statuses[i].String())
 			} else {
-				statusList += " " + statuses[i].String() + `,`
+				statusList += fmt.Sprintf("'%s', ", statuses[i].String())
 			}
 		}
-		statusList += `)`
-		query += ` AND ` + statusList
+		query += fmt.Sprintf(" AND %s)", statusList)
 	}
 	query += `;`
 
@@ -141,10 +142,13 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	WHERE id = $3`
 
 	for _, order := range orders {
-		_, err := r.db.Connection.ExecContext(ctx, query, order.Accrual, order.Status, order.ID)
-		if err != nil {
-			tx.Rollback()
-			return err
+		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
+		if err == nil {
+			_, err := r.db.Connection.ExecContext(ctx, query, order.Accrual, status, order.ID)
+			if err != nil {
+				tx.Rollback()
+				return err
+			}
 		}
 	}
 
