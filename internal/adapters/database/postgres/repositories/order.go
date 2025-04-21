@@ -119,10 +119,6 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 				"status", status,
 			)
 		} else {
-			r.logger.Infow(
-				"GetAll",
-				"OrderDB", w,
-			)
 			orders = append(orders, &w)
 		}
 
