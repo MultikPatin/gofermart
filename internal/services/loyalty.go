@@ -160,7 +160,7 @@ func (s *LoyaltyService) Update(ctx context.Context) error {
 			loyalty, err := s.lc.GetByOrderID(ctx, orderDB.Number)
 			s.logger.Infow(
 				"GetByOrderID",
-				"loyalty", loyalty,
+				"loyalty", *loyalty,
 			)
 			if err != nil {
 				errChan <- err
