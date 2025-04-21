@@ -152,7 +152,6 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 				"BatchUpdate",
 				"order.Accrual", order.Accrual,
 				"status", status,
-				"status", status,
 				"order.I", order.ID,
 			)
 			_, err := r.db.Connection.ExecContext(ctx, query, order.Accrual, status, order.ID)
@@ -164,5 +163,16 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	}
 
 	tx.Commit()
+
+	var statusesTest []enums.OrderStatusEnum
+
+	data, err := r.GetAll(ctx, statusesTest)
+	for _, d := range data {
+		r.logger.Infow(
+			"BatchUpdateGetAll",
+			"data", d,
+		)
+	}
+
 	return nil
 }
