@@ -119,6 +119,14 @@ func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderSta
 				"status", status,
 			)
 		} else {
+			r.logger.Infow(
+				"GetAll",
+				"ID", w.ID,
+				"Number", w.Number,
+				"Status", w.Status,
+				"Uploaded", w.Uploaded,
+				"Accrual", w.Accrual,
+			)
 			orders = append(orders, &w)
 		}
 
@@ -155,5 +163,9 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	}
 
 	tx.Commit()
+
+	var stats []enums.OrderStatusEnum
+	r.GetAll(ctx, stats)
+
 	return nil
 }
