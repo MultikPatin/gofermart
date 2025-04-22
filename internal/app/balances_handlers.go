@@ -145,7 +145,7 @@ func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	items := make([]schemas.Withdrawal, 0, len(results))
+	items := make([]schemas.Withdrawal, len(results))
 	for i := 0; i < len(results); i++ {
 		items[i] = schemas.Withdrawal(*results[i])
 	}

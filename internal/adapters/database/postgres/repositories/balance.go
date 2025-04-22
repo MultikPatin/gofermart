@@ -81,6 +81,7 @@ func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawa
 
 	for rows.Next() {
 		var w dtos.Withdrawal
+
 		err := rows.Scan(&w.Order, &w.Sum, &processedAt)
 		if err != nil {
 			return nil, err

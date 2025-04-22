@@ -94,5 +94,10 @@ func (s *BalancesService) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, 
 		return nil, err
 	}
 
+	s.logger.Infow(
+		"Withdrawals",
+		"results", results,
+	)
+
 	return results, nil
 }
