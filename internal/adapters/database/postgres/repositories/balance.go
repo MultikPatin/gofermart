@@ -57,9 +57,9 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.With
 	query := `
 	SELECT user_id
 	FROM orders
-	WHERE order_id = $1;`
+	WHERE order_id = $1 AND user_id = $2;`
 
-	row := r.db.Connection.QueryRowContext(ctx, query, withdrawal.Order)
+	row := r.db.Connection.QueryRowContext(ctx, query, withdrawal.Order, userID)
 	err := row.Scan(&ID)
 	if err != nil {
 		switch {
@@ -72,10 +72,6 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.With
 
 	if !orderExist {
 		return -1, services.ErrOrderIDNotValid
-	}
-
-	if ID != userID {
-		return -1, services.ErrOrderAlreadyLoadedByAnotherUser
 	}
 
 	query = `
