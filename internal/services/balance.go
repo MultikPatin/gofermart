@@ -53,6 +53,11 @@ func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdra
 	if err != nil {
 		return err
 	}
+	s.logger.Infow(
+		"balance",
+		"Current", balance.Current,
+		"Withdraw", balance.Withdraw,
+	)
 
 	if balance.Current < withdrawal.Sum {
 		return ErrPaymentRequired
@@ -73,6 +78,16 @@ func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdra
 func (s *BalancesService) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
 	ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
+
+	balance, err := s.Get(ctx)
+	if err != nil {
+		return nil, err
+	}
+	s.logger.Infow(
+		"balance",
+		"Current", balance.Current,
+		"Withdraw", balance.Withdraw,
+	)
 
 	results, err := s.repo.Withdrawals(ctx)
 	if err != nil {
