@@ -44,16 +44,21 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	return &result, nil
 }
 
-func (r *BalancesRepository) Withdraw(ctx context.Context, withdrawal *dtos.Withdraw) (int64, error) {
+func (r *BalancesRepository) Withdraw(ctx context.Context, withdraw *dtos.Withdraw) (int64, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
 	action := enums.BalanceWithdrawal.String()
 	var ID int64
+
+	r.logger.Infow(
+		"Withdraw",
+		"withdraw", withdraw,
+	)
 
 	query := `
 	INSERT INTO balances (user_id, order_id, action, amount)
 	VALUES ($1, $2, $3, $4) RETURNING id;`
 
-	err := r.db.Connection.QueryRowContext(ctx, query, userID, withdrawal.Order, action, withdrawal.Sum).Scan(&ID)
+	err := r.db.Connection.QueryRowContext(ctx, query, userID, withdraw.Order, action, withdraw.Sum).Scan(&ID)
 	if err != nil {
 		return -1, err
 	}
