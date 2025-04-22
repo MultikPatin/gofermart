@@ -1,0 +1,125 @@
+package repositories
+
+import (
+	"context"
+	_ "github.com/jackc/pgx/v5/stdlib"
+	"go.uber.org/zap"
+	"main/internal/adapters"
+	"main/internal/adapters/database/postgres"
+	"main/internal/constants"
+	"main/internal/dtos"
+	"main/internal/enums"
+	"time"
+)
+
+const (
+	getBalanceQuery = `
+		SELECT
+			SUM(CASE WHEN action = $1 THEN amount WHEN action = $2 THEN -amount END) AS current,
+			SUM(CASE WHEN action = $2 THEN amount ELSE 0 END) AS withdrawn
+		FROM balances
+		WHERE user_id = $3;`
+	withdrawQuery = `
+		INSERT INTO balances (user_id, order_id, action, amount)
+		VALUES ($1, $2, $3, $4) RETURNING id;`
+	withdrawalsQuery = `
+		SELECT order_id, amount, processed_at
+		FROM balances
+		WHERE action = $1 and user_id = $2
+		ORDER BY processed_at DESC;`
+	batchAddQuery = `
+		INSERT INTO balances (user_id, order_id, action, amount)
+		VALUES ($1, $2, $3, $4) RETURNING id;`
+)
+
+func NewBalancesRepository(db *postgres.Database) *BalancesRepository {
+	return &BalancesRepository{
+		db:     db,
+		logger: adapters.GetLogger(),
+	}
+}
+
+type BalancesRepository struct {
+	db     *postgres.Database
+	logger *zap.SugaredLogger
+}
+
+func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+
+	var result dtos.Balance
+	row := r.db.Connection.QueryRowContext(ctx, getBalanceQuery, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
+	err := row.Scan(&result.Current, &result.Withdrawn)
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+func (r *BalancesRepository) Withdraw(ctx context.Context, withdraw *dtos.Withdraw) (int64, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	action := enums.BalanceWithdrawal.String()
+	var ID int64
+
+	err := r.db.Connection.QueryRowContext(ctx, withdrawQuery, userID, withdraw.Order, action, withdraw.Sum).Scan(&ID)
+	if err != nil {
+		return -1, err
+	}
+
+	return ID, nil
+}
+
+func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawal, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	action := enums.BalanceWithdrawal.String()
+
+	rows, err := r.db.Connection.QueryContext(ctx, withdrawalsQuery, action, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var processedAt time.Time
+	var withdrawals []*dtos.Withdrawal
+
+	for rows.Next() {
+		var w dtos.Withdrawal
+
+		err := rows.Scan(&w.Order, &w.Sum, &processedAt)
+		if err != nil {
+			return nil, err
+		}
+		w.Processed = processedAt.Format(time.RFC3339)
+		withdrawals = append(withdrawals, &w)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return withdrawals, nil
+}
+
+func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit) ([]int64, error) {
+	userID := ctx.Value(constants.UserIDKey).(int64)
+	action := enums.BalanceDeposit.String()
+
+	tx, err := r.db.Connection.BeginTx(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var results []int64
+
+	for _, item := range items {
+		var ID int64
+		err := r.db.Connection.QueryRowContext(ctx, batchAddQuery, userID, item.OrderNumber, action, item.Amount).Scan(&ID)
+		if err != nil {
+			tx.Rollback()
+			return nil, err
+		}
+		results = append(results, ID)
+	}
+
+	tx.Commit()
+	return results, nil
+}
