@@ -19,8 +19,8 @@ func main() {
 			"Starting server",
 			"error", err.Error(),
 		)
-		panic(err)
 	}
+
 	defer func(shorterApp *app.App) {
 		err := shorterApp.Close()
 		if err != nil {
