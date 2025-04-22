@@ -14,6 +14,18 @@ import (
 	"main/internal/services"
 )
 
+const (
+	getByLoginQuery = `
+		SELECT id, login, password 
+		FROM users 
+		WHERE login=$1 
+		LIMIT 1;`
+	addUserQuery = `
+		INSERT INTO users (login, password) 
+		VALUES ($1, $2) 
+		RETURNING id;`
+)
+
 func NewUsersRepository(db *postgres.Database) *UsersRepository {
 	return &UsersRepository{
 		db:     db,
@@ -27,14 +39,8 @@ type UsersRepository struct {
 }
 
 func (r *UsersRepository) GetByLogin(ctx context.Context, login string) (*dtos.User, error) {
-	query := `
-	SELECT id, login, password 
-	FROM users 
-	WHERE login=$1 
-	LIMIT 1;`
-
 	user := new(dtos.User)
-	row := r.db.Connection.QueryRowContext(ctx, query, login)
+	row := r.db.Connection.QueryRowContext(ctx, getByLoginQuery, login)
 	err := row.Scan(&user.ID, &user.Login, &user.Password)
 	if err != nil {
 		switch {
@@ -48,13 +54,8 @@ func (r *UsersRepository) GetByLogin(ctx context.Context, login string) (*dtos.U
 }
 
 func (r *UsersRepository) Add(ctx context.Context, credentials *dtos.AuthCredentials) (int64, error) {
-	query := `
-	INSERT INTO users (login, password) 
-	VALUES ($1, $2) 
-	RETURNING id;`
-
 	var userID int64
-	err := r.db.Connection.QueryRowContext(ctx, query, credentials.Login, credentials.Password).Scan(&userID)
+	err := r.db.Connection.QueryRowContext(ctx, addUserQuery, credentials.Login, credentials.Password).Scan(&userID)
 	if err == nil {
 		return userID, err
 	}

@@ -16,6 +16,25 @@ import (
 	"time"
 )
 
+const (
+	existQuery = `
+		SELECT user_id, order_id 
+		FROM orders 
+		WHERE order_id = $1;`
+	addQuery = `
+		INSERT INTO orders (user_id, order_id, accrual, status) 
+		VALUES ($1, $2, $3, $4) 
+		RETURNING id;`
+	getAllQuery = `
+		SELECT id, order_id, status, uploaded_at, accrual
+		FROM orders 
+		WHERE user_id = $1`
+	butchUpdateQuery = `
+		UPDATE orders
+		SET accrual = $1, status = $2
+		WHERE id = $3;`
+)
+
 func NewOrdersRepository(db *postgres.Database) *OrdersRepository {
 	return &OrdersRepository{
 		db:     db,
@@ -33,14 +52,9 @@ func (r *OrdersRepository) Add(ctx context.Context, orderCreate *dtos.OrderCreat
 	accrual := 0
 	orderExist := true
 
-	query := `
-	SELECT user_id, order_id 
-	FROM orders 
-	WHERE order_id = $1;`
-
 	var userID int64
 	var orderID int64
-	row := r.db.Connection.QueryRowContext(ctx, query, orderCreate.Number)
+	row := r.db.Connection.QueryRowContext(ctx, existQuery, orderCreate.Number)
 	err := row.Scan(&userID, &orderID)
 	if err != nil {
 		switch {
@@ -59,12 +73,7 @@ func (r *OrdersRepository) Add(ctx context.Context, orderCreate *dtos.OrderCreat
 		}
 	}
 
-	query = `
-	INSERT INTO orders (user_id, order_id, accrual, status) 
-	VALUES ($1, $2, $3, $4) 
-	RETURNING id;`
-
-	err = r.db.Connection.QueryRowContext(ctx, query, userIDContext, orderCreate.Number, accrual, orderCreate.Status.String()).Scan(&orderID)
+	err = r.db.Connection.QueryRowContext(ctx, addQuery, userIDContext, orderCreate.Number, accrual, orderCreate.Status.String()).Scan(&orderID)
 	if err != nil {
 		return -1, err
 	}
@@ -74,24 +83,7 @@ func (r *OrdersRepository) Add(ctx context.Context, orderCreate *dtos.OrderCreat
 func (r *OrdersRepository) GetAll(ctx context.Context, statuses []enums.OrderStatusEnum) ([]*dtos.OrderDB, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
 
-	query := `
-	SELECT id, order_id, status, uploaded_at, accrual
-	FROM orders 
-	WHERE user_id = $1`
-
-	if len(statuses) > 0 {
-		statusList := `status IN (`
-
-		for i := 0; i < len(statuses); i++ {
-			if i == len(statuses)-1 {
-				statusList += fmt.Sprintf("'%s'", statuses[i].String())
-			} else {
-				statusList += fmt.Sprintf("'%s', ", statuses[i].String())
-			}
-		}
-		query += fmt.Sprintf(" AND %s)", statusList)
-	}
-	query += `;`
+	query := ConcatINQuery(getAllQuery, statuses)
 
 	rows, err := r.db.Connection.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -136,17 +128,12 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 		return err
 	}
 
-	query := `
-	UPDATE orders
-	SET accrual = $1, status = $2
-	WHERE id = $3;`
-
 	for _, order := range orders {
 		status, err := MutateLoyaltyToOrderStatus(order.Status)
 		if err != nil {
 			return err
 		}
-		_, err = tx.ExecContext(ctx, query, float64(order.Accrual), status.String(), order.ID)
+		_, err = tx.ExecContext(ctx, butchUpdateQuery, float64(order.Accrual), status.String(), order.ID)
 		if err != nil {
 			tx.Rollback()
 			return err
@@ -171,4 +158,21 @@ func MutateLoyaltyToOrderStatus(status enums.LoyaltyStatusEnum) (enums.OrderStat
 	default:
 		return 0, fmt.Errorf("invalid loyalty status")
 	}
+}
+
+func ConcatINQuery(query string, statuses []enums.OrderStatusEnum) string {
+	if len(statuses) > 0 {
+		statusList := `status IN (`
+
+		for i := 0; i < len(statuses); i++ {
+			if i == len(statuses)-1 {
+				statusList += fmt.Sprintf("'%s'", statuses[i].String())
+			} else {
+				statusList += fmt.Sprintf("'%s', ", statuses[i].String())
+			}
+		}
+		query += fmt.Sprintf(" AND %s)", statusList)
+	}
+	query += `;`
+	return query
 }

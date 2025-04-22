@@ -12,6 +12,26 @@ import (
 	"time"
 )
 
+const (
+	getBalanceQuery = `
+		SELECT
+			SUM(CASE WHEN action = $1 THEN amount WHEN action = $2 THEN -amount END) AS current,
+			SUM(CASE WHEN action = $2 THEN amount ELSE 0 END) AS withdrawn
+		FROM balances
+		WHERE user_id = $3;`
+	withdrawQuery = `
+		INSERT INTO balances (user_id, order_id, action, amount)
+		VALUES ($1, $2, $3, $4) RETURNING id;`
+	withdrawalsQuery = `
+		SELECT order_id, amount, processed_at
+		FROM balances
+		WHERE action = $1 and user_id = $2
+		ORDER BY processed_at DESC;`
+	batchAddQuery = `
+		INSERT INTO balances (user_id, order_id, action, amount)
+		VALUES ($1, $2, $3, $4) RETURNING id;`
+)
+
 func NewBalancesRepository(db *postgres.Database) *BalancesRepository {
 	return &BalancesRepository{
 		db:     db,
@@ -27,15 +47,8 @@ type BalancesRepository struct {
 func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 	userID := ctx.Value(constants.UserIDKey).(int64)
 
-	query := `
-	SELECT
-		SUM(CASE WHEN action = $1 THEN amount WHEN action = $2 THEN -amount END) AS current,
-    	SUM(CASE WHEN action = $2 THEN amount ELSE 0 END) AS withdrawn
-	FROM balances
-	WHERE user_id = $3;`
-
 	var result dtos.Balance
-	row := r.db.Connection.QueryRowContext(ctx, query, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
+	row := r.db.Connection.QueryRowContext(ctx, getBalanceQuery, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
 	err := row.Scan(&result.Current, &result.Withdrawn)
 	if err != nil {
 		return nil, err
@@ -49,11 +62,7 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdraw *dtos.Withdr
 	action := enums.BalanceWithdrawal.String()
 	var ID int64
 
-	query := `
-	INSERT INTO balances (user_id, order_id, action, amount)
-	VALUES ($1, $2, $3, $4) RETURNING id;`
-
-	err := r.db.Connection.QueryRowContext(ctx, query, userID, withdraw.Order, action, withdraw.Sum).Scan(&ID)
+	err := r.db.Connection.QueryRowContext(ctx, withdrawQuery, userID, withdraw.Order, action, withdraw.Sum).Scan(&ID)
 	if err != nil {
 		return -1, err
 	}
@@ -65,13 +74,7 @@ func (r *BalancesRepository) Withdrawals(ctx context.Context) ([]*dtos.Withdrawa
 	userID := ctx.Value(constants.UserIDKey).(int64)
 	action := enums.BalanceWithdrawal.String()
 
-	query := `
-    SELECT order_id, amount, processed_at
-    FROM balances
-    WHERE action = $1 and user_id = $2
-    ORDER BY processed_at DESC;`
-
-	rows, err := r.db.Connection.QueryContext(ctx, query, action, userID)
+	rows, err := r.db.Connection.QueryContext(ctx, withdrawalsQuery, action, userID)
 	if err != nil {
 		return nil, err
 	}
@@ -105,15 +108,11 @@ func (r *BalancesRepository) BatchAdd(ctx context.Context, items []*dtos.Deposit
 		return nil, err
 	}
 
-	query := `
-	INSERT INTO balances (user_id, order_id, action, amount)
-	VALUES ($1, $2, $3, $4) RETURNING id;`
-
 	var results []int64
 
 	for _, item := range items {
 		var ID int64
-		err := r.db.Connection.QueryRowContext(ctx, query, userID, item.OrderNumber, action, item.Amount).Scan(&ID)
+		err := r.db.Connection.QueryRowContext(ctx, batchAddQuery, userID, item.OrderNumber, action, item.Amount).Scan(&ID)
 		if err != nil {
 			tx.Rollback()
 			return nil, err
