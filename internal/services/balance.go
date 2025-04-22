@@ -58,12 +58,9 @@ func (s *BalancesService) Withdraw(ctx context.Context, withdrawal *dtos.Withdra
 		return ErrPaymentRequired
 	}
 
-	s.logger.Infow(
-		"withdraw",
-		"Current", balance.Current,
-		"Sum", withdrawal.Sum,
-		"Order", withdrawal.Order,
-	)
+	if !IsValidLuhn(withdrawal.Order) {
+		return ErrOrderIDNotValid
+	}
 
 	_, err = s.repo.Withdraw(ctx, withdrawal)
 	if err != nil {
