@@ -142,7 +142,7 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	WHERE id = $3;`
 
 	for _, order := range orders {
-		status, err := enums.MutateLoyaltyToOrderStatus(order.Status)
+		status, err := MutateLoyaltyToOrderStatus(order.Status)
 		if err != nil {
 			return err
 		}
@@ -155,9 +155,20 @@ func (r *OrdersRepository) BatchUpdate(ctx context.Context, orders []*dtos.Updat
 	}
 
 	tx.Commit()
-
-	var stats []enums.OrderStatusEnum
-	r.GetAll(ctx, stats)
-
 	return nil
+}
+
+func MutateLoyaltyToOrderStatus(status enums.LoyaltyStatusEnum) (enums.OrderStatusEnum, error) {
+	switch status {
+	case enums.LoyaltyRegistered:
+		return enums.OrderCreated, nil
+	case enums.LoyaltyProcessing:
+		return enums.OrderProcessing, nil
+	case enums.LoyaltyInvalid:
+		return enums.OrderInvalid, nil
+	case enums.LoyaltyProcessed:
+		return enums.OrderProcessed, nil
+	default:
+		return 0, fmt.Errorf("invalid loyalty status")
+	}
 }
