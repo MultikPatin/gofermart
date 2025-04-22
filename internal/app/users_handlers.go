@@ -32,8 +32,7 @@ type UsersHandler struct {
 func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodPost {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodPost, w, r) {
 		return
 	}
 
@@ -85,8 +84,7 @@ func (h *UsersHandler) Register(w http.ResponseWriter, r *http.Request) {
 func (h *UsersHandler) Login(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodPost {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodPost, w, r) {
 		return
 	}
 

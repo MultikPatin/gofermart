@@ -28,8 +28,7 @@ type OrdersHandler struct {
 func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodPost {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodPost, w, r) {
 		return
 	}
 
@@ -75,8 +74,7 @@ func (h *OrdersHandler) Add(w http.ResponseWriter, r *http.Request) {
 func (h *OrdersHandler) GetAll(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodGet, w, r) {
 		return
 	}
 

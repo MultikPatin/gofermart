@@ -30,8 +30,7 @@ type BalancesHandler struct {
 func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodGet, w, r) {
 		return
 	}
 
@@ -68,8 +67,7 @@ func (h *BalancesHandler) Get(w http.ResponseWriter, r *http.Request) {
 func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodPost {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodPost, w, r) {
 		return
 	}
 
@@ -119,8 +117,7 @@ func (h *BalancesHandler) Withdraw(w http.ResponseWriter, r *http.Request) {
 func (h *BalancesHandler) Withdrawals(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
-	if r.Method != http.MethodGet {
-		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+	if !isAllowedMethod(http.MethodGet, w, r) {
 		return
 	}
 
