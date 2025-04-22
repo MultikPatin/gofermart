@@ -191,8 +191,8 @@ func easyjsonBed2650eDecodeMainInternalSchemas2(in *jlexer.Lexer, out *Balance) 
 		switch key {
 		case "current":
 			out.Current = float32(in.Float32())
-		case "withdraw":
-			out.Withdraw = float32(in.Float32())
+		case "withdrawn":
+			out.Withdrawn = float32(in.Float32())
 		default:
 			in.SkipRecursive()
 		}
@@ -213,9 +213,9 @@ func easyjsonBed2650eEncodeMainInternalSchemas2(out *jwriter.Writer, in Balance)
 		out.Float32(float32(in.Current))
 	}
 	{
-		const prefix string = ",\"withdraw\":"
+		const prefix string = ",\"withdrawn\":"
 		out.RawString(prefix)
-		out.Float32(float32(in.Withdraw))
+		out.Float32(float32(in.Withdrawn))
 	}
 	out.RawByte('}')
 }

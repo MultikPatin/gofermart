@@ -36,7 +36,7 @@ func (r *BalancesRepository) Get(ctx context.Context) (*dtos.Balance, error) {
 
 	var result dtos.Balance
 	row := r.db.Connection.QueryRowContext(ctx, query, enums.BalanceDeposit.String(), enums.BalanceWithdrawal.String(), userID)
-	err := row.Scan(&result.Current, &result.Withdraw)
+	err := row.Scan(&result.Current, &result.Withdrawn)
 	if err != nil {
 		return nil, err
 	}
@@ -48,11 +48,6 @@ func (r *BalancesRepository) Withdraw(ctx context.Context, withdraw *dtos.Withdr
 	userID := ctx.Value(constants.UserIDKey).(int64)
 	action := enums.BalanceWithdrawal.String()
 	var ID int64
-
-	r.logger.Infow(
-		"Withdraw",
-		"withdraw", withdraw,
-	)
 
 	query := `
 	INSERT INTO balances (user_id, order_id, action, amount)

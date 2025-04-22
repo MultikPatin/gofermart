@@ -1,8 +1,8 @@
 package dtos
 
 type Balance struct {
-	Current  float32
-	Withdraw float32
+	Current   float32
+	Withdrawn float32
 }
 
 type Withdraw struct {

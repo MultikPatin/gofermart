@@ -42,11 +42,6 @@ func (s *BalancesService) Get(ctx context.Context) (*dtos.Balance, error) {
 		return nil, err
 	}
 
-	s.logger.Infow(
-		"Balance",
-		"balance", balance,
-	)
-
 	return balance, nil
 }
 
